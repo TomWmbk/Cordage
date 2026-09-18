@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "../lib/utils"
+import { cardStyles } from "../lib/styles"
 
 const Card = React.forwardRef<
     HTMLDivElement,
@@ -8,7 +9,7 @@ const Card = React.forwardRef<
     <div
         ref={ref}
         className={cn(
-            "rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm",
+            cardStyles.root,
             className
         )}
         {...props}
@@ -22,7 +23,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <div
         ref={ref}
-        className={cn("flex flex-col space-y-1.5 p-6", className)}
+        className={cn(cardStyles.header, className)}
         {...props}
     />
 ))
@@ -35,7 +36,7 @@ const CardTitle = React.forwardRef<
     <h3
         ref={ref}
         className={cn(
-            "text-2xl font-semibold leading-none tracking-tight",
+            cardStyles.title,
             className
         )}
         {...props}
@@ -47,7 +48,7 @@ const CardContent = React.forwardRef<
     HTMLDivElement,
     React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+    <div ref={ref} className={cn(cardStyles.content, className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 

@@ -1,9 +1,20 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     ports:
-      - "8080:8080"
+      - "8080:3000"
     volumes:
-      - ./dev.db:/app/prisma/dev.db
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+      - ./prisma/dev.db:/app/prisma/dev.db
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=file:./dev.db
+      - NODE_ENV=development
+      - AUTH_SECRET=change-this-secret-key-in-production
+      - NEXTAUTH_URL=http://localhost:8080
+      - NEXTAUTH_URL_INTERNAL=http://localhost:3000
+    restart: unless-stopped
+    command: npm run dev

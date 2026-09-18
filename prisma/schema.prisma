@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  engineType = "library"
+  provider      = "prisma-client-js"
+  engineType    = "library"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,21 +14,38 @@ datasource db {
 
 model Customer {
   id             Int         @id @default(autoincrement())
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
   firstName      String
-  lastName       String?
   sport          String      // "Tennis", "Badminton", "Squash"
   defaultTension String?     // e.g. "24" or "24/23"
+  defaultPrice   Float?
   balance        Float       @default(0.0)
   createdAt      DateTime    @default(now())
   
   jobs           RacketJob[]
 
   @@index([firstName])
-  @@index([lastName])
+  @@index([userId])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // Hashed password
+  role      String   @default("stringer") // "stringer" or "player"
+  createdAt DateTime @default(now())
+  
+  // Multi-tenant relations
+  customers  Customer[]
+  racketJobs RacketJob[]
+  stringReferences StringReference[]
 }
 
 model RacketJob {
   id             Int       @id @default(autoincrement())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id])
   customerId     Int
   customer       Customer  @relation(fields: [customerId], references: [id])
   
@@ -39,5 +57,27 @@ model RacketJob {
   isDone         Boolean   @default(false)
   isPaid         Boolean   @default(false)
   isReturned     Boolean   @default(false)
+  
+  cost       Float   @default(0) // Cost of the string/materials
+  stringName String? // Name of the string used (snapshot)
+  
+  @@index([userId])
 }
 
+model StringReference {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  
+  brand     String
+  model     String
+  gauge     String?  // e.g. "1.25"
+  price     Float    // Selling price
+  type      String?  // "Monofilament", etc.
+  isInStock Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
