@@ -12,7 +12,7 @@ export function AuthShell({ eyebrow, title, description, children }: {
 }) {
     return (
         <div className="grid min-h-dvh bg-canvas lg:grid-cols-[.85fr_1.15fr]">
-            <aside className="relative hidden overflow-hidden border-r border-white/10 bg-ink p-10 text-white lg:flex lg:flex-col lg:justify-between">
+            <aside className="relative hidden overflow-hidden border-r border-white/10 bg-[#171c19] p-10 text-white lg:flex lg:flex-col lg:justify-between">
                 <Link href="/" className="relative z-10 w-fit text-white"><BrandLockup /></Link>
                 <div className="absolute inset-y-24 -right-20 w-[32rem] text-stone-300/35"><RacketGraphic /></div>
                 <div className="court-lines absolute inset-0 opacity-20" />

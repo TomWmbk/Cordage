@@ -4,14 +4,14 @@ Application responsive de gestion d’activité pour cordeurs de raquettes.
 
 ## Fonctionnalités
 
-- comptes distincts pour cordeurs et joueurs ;
+- comptes privés pour cordeurs ;
 - suivi des poses, paiements et retours ;
 - mémorisation des préférences client ;
 - catalogue de cordages en stock ;
 - historique, filtres, statistiques et export JSON ;
 - interface claire/sombre adaptée au mobile.
 
-L’espace joueur est actuellement limité à la gestion du compte. Le suivi détaillé des raquettes est prévu dans une prochaine version.
+L’espace joueur est conservé hors ligne dans le code pour une version ultérieure. Il n’est ni proposé à l’inscription, ni accessible publiquement.
 
 ## Installation locale
 

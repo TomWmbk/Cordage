@@ -69,9 +69,7 @@ select {
 
 .app-shell {
   min-height: 100dvh;
-  background:
-    linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), color-mix(in srgb, var(--line) 38%, transparent) calc(100% - 1px)) 0 0 / min(8.333vw, 120px) 100%,
-    var(--background);
+  background: var(--background);
 }
 
 .sport-panel {

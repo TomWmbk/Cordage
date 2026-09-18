@@ -11,7 +11,7 @@ export function DeleteJobButton({ jobId }: { jobId: number }) {
                     deleteJob(jobId)
                 }
             }}
-            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-slate-100"
+            className="p-1 text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid"
             title="Supprimer"
             aria-label="Supprimer ce cordage"
         >

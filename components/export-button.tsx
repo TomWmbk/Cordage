@@ -20,7 +20,7 @@ export function ExportButton() {
     }
 
     return (
-        <Button variant="outline" onClick={handleExport} className="gap-2 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
+        <Button variant="outline" onClick={handleExport} className="gap-2">
             <Download className="w-4 h-4" />
             Export JSON
         </Button>

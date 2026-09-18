@@ -131,12 +131,12 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
     return (
         <>
             {/* Main Page KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button type="button" className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 dark:focus-visible:ring-slate-100" onClick={() => setActiveModalMetric('profit')}>
-                    <Card className={cn(kpiStyles.card, "h-full transition-all hover:shadow-md") }>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <button type="button" className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid focus-visible:ring-offset-2" onClick={() => setActiveModalMetric('profit')}>
+                    <Card className={cn(kpiStyles.card, "h-full transition-all duration-200 hover:-translate-y-1") }>
                         <CardHeader className={kpiStyles.header}>
                             <CardTitle className={kpiStyles.title}>Bénéfice Total</CardTitle>
-                            <Wallet className={kpiStyles.icon.emerald} aria-hidden="true" />
+                            <Wallet className="h-5 w-5 text-acid" aria-hidden="true" />
                         </CardHeader>
                         <CardContent>
                             <div className={kpiStyles.value}>{globalKpis.profit.toFixed(2)} €</div>
@@ -145,11 +145,11 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
                     </Card>
                 </button>
 
-                <button type="button" className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 dark:focus-visible:ring-slate-100" onClick={() => setActiveModalMetric('volume')}>
-                    <Card className={cn(kpiStyles.card, "h-full transition-all hover:shadow-md") }>
+                <button type="button" className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid focus-visible:ring-offset-2" onClick={() => setActiveModalMetric('volume')}>
+                    <Card className={cn(kpiStyles.card, "h-full transition-all duration-200 hover:-translate-y-1") }>
                         <CardHeader className={kpiStyles.header}>
                             <CardTitle className={kpiStyles.title}>Volume Total</CardTitle>
-                            <History className={kpiStyles.icon.orange} aria-hidden="true" />
+                            <History className="h-5 w-5 text-acid" aria-hidden="true" />
                         </CardHeader>
                         <CardContent>
                             <div className={kpiStyles.value}>{globalKpis.volume}</div>
@@ -162,30 +162,30 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
             {/* Modal */}
             {activeModalMetric && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-[#171c19]/70 p-4 backdrop-blur-sm motion-enter"
                     onClick={() => setActiveModalMetric(null)}
                 >
                     <div
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="stats-modal-title"
-                        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-auto rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                        className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-auto border border-line bg-surface shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
 
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between border-b border-line bg-ink p-4 text-white dark:bg-surface-strong">
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 ref={closeButtonRef}
                                 onClick={() => setActiveModalMetric(null)}
-                                className="hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400"
+                                className="text-stone-300 hover:bg-white/10 hover:text-white"
                                 aria-label="Fermer le détail"
                             >
                                 <X className="w-5 h-5" />
                             </Button>
-                            <h2 id="stats-modal-title" className="text-center text-lg font-semibold text-slate-900 dark:text-white">
+                            <h2 id="stats-modal-title" className="text-center font-display text-2xl font-bold uppercase">
                                 {activeModalMetric === 'profit' ? 'Évolution du Bénéfice' : 'Évolution du Volume'}
                             </h2>
                             <div className="w-10"></div>
@@ -193,7 +193,7 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
 
                         <div className="space-y-6 p-4 sm:p-6">
                             {/* Date Range Selector */}
-                            <div className="flex flex-col gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                            <div className="flex flex-col gap-4 border border-line bg-surface-strong p-4">
                                 {/* Quick Select Buttons */}
                                 <div className="flex flex-wrap justify-center gap-2">
                                     {[
@@ -217,7 +217,7 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
                                                 setStartDate(start.toISOString().split('T')[0])
                                                 setEndDate(end.toISOString().split('T')[0])
                                             }}
-                                            className="bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                            className="bg-surface"
                                         >
                                             {period.label}
                                         </Button>
@@ -226,24 +226,24 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
 
                                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                                        <label htmlFor="stats-start-date" className="text-sm font-medium text-slate-700 dark:text-slate-300">Du</label>
+                                        <Calendar className="h-4 w-4 text-muted" />
+                                        <label htmlFor="stats-start-date" className="text-sm font-semibold">Du</label>
                                         <Input
                                             id="stats-start-date"
                                             type="date"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="w-auto dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:[color-scheme:dark]"
+                                            className="w-auto dark:[color-scheme:dark]"
                                         />
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <label htmlFor="stats-end-date" className="text-sm font-medium text-slate-700 dark:text-slate-300">Au</label>
+                                        <label htmlFor="stats-end-date" className="text-sm font-semibold">Au</label>
                                         <Input
                                             id="stats-end-date"
                                             type="date"
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="w-auto dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:[color-scheme:dark]"
+                                            className="w-auto dark:[color-scheme:dark]"
                                         />
                                     </div>
                                 </div>
@@ -285,8 +285,8 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
                                         />
                                         <Bar
                                             dataKey="value"
-                                            fill={activeModalMetric === 'profit' ? '#10b981' : '#f97316'}
-                                            radius={[4, 4, 0, 0]}
+                                            fill="#c8ef32"
+                                            radius={[2, 2, 0, 0]}
                                         />
                                     </BarChart>
                                 </ResponsiveContainer>

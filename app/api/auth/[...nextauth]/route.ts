@@ -2,7 +2,6 @@ import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { isUserRole } from "@/lib/domain"
 
 export const authOptions: NextAuthOptions = {
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
@@ -35,7 +34,7 @@ export const authOptions: NextAuthOptions = {
                     return null
                 }
 
-                if (!isUserRole(user.role)) return null
+                if (user.role !== 'stringer') return null
 
                 return {
                     id: user.id.toString(),

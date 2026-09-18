@@ -5,7 +5,7 @@ import { createJob, getCustomers } from '@/app/actions'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
-import { Search, Percent, X } from 'lucide-react'
+import { Search, Percent, X, Crosshair, Plus } from 'lucide-react'
 
 type StringReference = {
     id: number
@@ -127,18 +127,19 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
     }
 
     return (
-        <Card className="mb-8 border-slate-200 shadow-sm dark:border-slate-700">
-            <CardHeader className="bg-slate-50/50 pb-4 dark:bg-slate-900/50 dark:border-b dark:border-slate-800">
-                <CardTitle as="h2" className="text-lg font-medium text-slate-800 flex items-center gap-2 dark:text-white">
-                    Nouveau Cordage
+        <Card className="sport-panel mb-8">
+            <CardHeader className="border-b border-line bg-ink px-5 py-4 text-white dark:bg-surface-strong">
+                <CardTitle as="h2" className="flex items-center justify-between gap-3 font-display text-2xl font-bold uppercase tracking-tight">
+                    <span className="flex items-center gap-2"><Crosshair className="h-5 w-5 text-acid" /> Nouvelle pose</span>
+                    <span className="hidden text-xs font-semibold tracking-[.16em] text-stone-400 sm:inline">Entrée atelier</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="p-5 sm:p-6">
                 <form action={handleSubmit} className="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
 
                     {/* Name Input with Autocomplete */}
                     <div className="md:col-span-3 relative" ref={wrapperRef}>
-                        <label htmlFor="job-first-name" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prénom</label>
+                        <label htmlFor="job-first-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Client</label>
                         <div className="relative">
                             <Input
                                 name="firstName"
@@ -150,25 +151,25 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                     setShowSuggestions(true)
                                 }}
                                 autoComplete="off"
-                                className="pl-9 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                                className="pl-9"
                                 required
                             />
-                            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
+                            <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted" />
                         </div>
 
                         {showSuggestions && suggestions.length > 0 && (
-                            <div role="listbox" aria-label="Clients suggérés" className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                            <div role="listbox" aria-label="Clients suggérés" className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm border border-line bg-surface-strong shadow-xl">
                                 {suggestions.map((c) => (
                                     <button
                                         type="button"
                                         role="option"
                                         aria-selected="false"
                                         key={c.id}
-                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700"
+                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-ink hover:bg-acid/20 dark:text-white"
                                         onClick={() => selectCustomer(c)}
                                     >
                                         <span className="font-medium">{c.firstName}</span>
-                                        <span className="text-xs text-slate-400 ml-2">({c.sport})</span>
+                                        <span className="ml-2 text-xs text-muted">({c.sport})</span>
                                     </button>
                                 ))}
                             </div>
@@ -177,14 +178,14 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* Sport */}
                     <div className="md:col-span-2">
-                        <label htmlFor="job-sport" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Sport</label>
+                        <label htmlFor="job-sport" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Sport</label>
                         <select
                             name="sport"
                             id="job-sport"
                             value={sport}
                             onChange={(e) => setSport(e.target.value)}
                             required
-                            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:ring-offset-slate-950 dark:placeholder:text-slate-400"
+                            className="flex h-11 w-full rounded-sm border border-line bg-surface-strong px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:text-white"
                         >
                             <option value="" disabled>Choisir...</option>
                             <option value="Tennis">Tennis</option>
@@ -195,13 +196,13 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* String Selection */}
                     <div className="md:col-span-3">
-                        <label htmlFor="job-string" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Cordage</label>
+                        <label htmlFor="job-string" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Cordage</label>
                         <select
                             name="stringId"
                             id="job-string"
                             value={selectedStringId}
                             onChange={handleStringChange}
-                            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:ring-offset-slate-950 dark:placeholder:text-slate-400"
+                            className="flex h-11 w-full rounded-sm border border-line bg-surface-strong px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:text-white"
                         >
                             <option value="">Sélectionner...</option>
                             {stringReferences.map((str) => (
@@ -214,7 +215,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* Tension */}
                     <div className="md:col-span-1">
-                        <label htmlFor="job-tension" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Tension</label>
+                        <label htmlFor="job-tension" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Tension</label>
                         <Input
                             name="tension"
                             id="job-tension"
@@ -225,14 +226,14 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                             placeholder="24"
                             value={tension}
                             onChange={(e) => setTension(e.target.value)}
-                            className="dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                            className="font-display text-lg font-semibold tabular-nums"
                             required
                         />
                     </div>
 
                     {/* Price & Credit */}
                     <div className="md:col-span-3">
-                        <label htmlFor="job-price" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prix</label>
+                        <label htmlFor="job-price" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Prix</label>
                         <div className="flex items-center gap-2">
                             <div className="relative w-32">
                                 <Input
@@ -244,11 +245,11 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                     max="10000"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
-                                    className="dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500 pr-6"
+                                    className="pr-6 font-display text-lg font-semibold tabular-nums"
                                     placeholder="25"
                                     required
                                 />
-                                <span className="absolute right-2 top-2.5 text-slate-400 text-sm">€</span>
+                                <span className="absolute right-2 top-3 text-sm text-muted">€</span>
                             </div>
 
                             {showCredit ? (
@@ -263,7 +264,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                             placeholder="Rem."
                                             value={creditAmount}
                                             onChange={(e) => setCreditAmount(e.target.value)}
-                                            className="dark:bg-slate-900 dark:border-slate-700 dark:text-white px-2 text-sm"
+                                            className="px-2 text-sm"
                                         />
                                     </div>
                                     <Button
@@ -274,7 +275,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                             setShowCredit(false)
                                             setCreditAmount('')
                                         }}
-                                        className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                        className="h-8 w-8 text-muted hover:text-ink dark:hover:text-white"
                                         aria-label="Supprimer la remise"
                                     >
                                         <X className="w-3 h-3" />
@@ -286,7 +287,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setShowCredit(true)}
-                                    className="h-10 w-10 text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400"
+                                        className="h-11 w-11 text-muted hover:text-ink dark:hover:text-acid"
                                     title="Ajouter une remise"
                                 >
                                     <Percent className="w-4 h-4" />
@@ -303,8 +304,9 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* Submit */}
                     <div className="md:col-span-12 mt-2">
-                        <Button type="submit" disabled={submitting} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700">
-                            {submitting ? 'Ajout en cours…' : 'Ajouter'}
+                        <Button type="submit" disabled={submitting} size="lg" className="w-full gap-2">
+                            <Plus className="h-4 w-4" />
+                            {submitting ? 'Mise en file…' : 'Ajouter au plan de travail'}
                         </Button>
                     </div>
 

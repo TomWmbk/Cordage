@@ -51,9 +51,11 @@ export function parseRegistrationInput(input: unknown): ValidationResult<{
     if (password.length < 8 || password.length > 128) {
         return { ok: false, error: 'Le mot de passe doit contenir entre 8 et 128 caractères' }
     }
-    if (input.role !== 'stringer') return { ok: false, error: 'Rôle invalide' }
+    if (typeof input.role !== 'string' || !PUBLIC_USER_ROLES.includes(input.role as 'stringer')) {
+        return { ok: false, error: 'Rôle invalide' }
+    }
 
-    return { ok: true, data: { username, password, role: input.role } }
+    return { ok: true, data: { username, password, role: 'stringer' } }
 }
 
 export function parseJobInput(formData: FormData): ValidationResult<{

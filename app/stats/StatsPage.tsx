@@ -7,6 +7,7 @@ import { pageStyles } from '@/lib/styles'
 import { ExportButton } from '@/components/export-button'
 import { StatsDashboard } from '@/components/stats-dashboard'
 import { requireRole } from '@/lib/auth'
+import { PageIntro } from '@/components/page-intro'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,12 +91,14 @@ export default async function StatsPage({
             <Header />
 
             <main className={pageStyles.container}>
-                <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-0">Statistiques</h1>
-                    <div className="w-full sm:w-auto [&>button]:w-full">
+                <PageIntro
+                    eyebrow="Lecture atelier"
+                    title="Performance"
+                    description="Mesurez le volume traité et le résultat réel, sans perdre le détail des poses."
+                    action={<div className="w-full sm:w-auto [&>button]:w-full">
                         <ExportButton />
-                    </div>
-                </div>
+                    </div>}
+                />
 
                 {/* Interactive Dashboard */}
                 <section className="mb-12">
@@ -113,7 +116,7 @@ export default async function StatsPage({
                 {/* History Table with Filters */}
                 <section>
                     <div className={pageStyles.sectionHeader}>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Historique des Cordages</h2>
+                        <h2 className={pageStyles.sectionTitle}>Historique des poses</h2>
                         <span className={pageStyles.countBadge}>
                             {historyJobs.length}
                         </span>
@@ -124,7 +127,8 @@ export default async function StatsPage({
                     <div className="space-y-4">
                         {historyJobs.length === 0 ? (
                             <div className={pageStyles.emptyState}>
-                                Aucun cordage trouvé avec ces filtres.
+                                <p className="font-display text-2xl font-bold uppercase text-ink dark:text-white">Aucun résultat</p>
+                                <p className="mt-2">Modifiez les filtres pour retrouver une pose.</p>
                             </div>
                         ) : (
                             historyJobs.map((job) => (

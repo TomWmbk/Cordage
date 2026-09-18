@@ -3,6 +3,7 @@ import { StockManager } from '@/components/stock-manager'
 import { getStringReferences } from '@/app/stock/actions'
 import { pageStyles } from '@/lib/styles'
 import { requireRole } from '@/lib/auth'
+import { PageIntro } from '@/components/page-intro'
 
 export default async function StockPage() {
     await requireRole('stringer')
@@ -12,9 +13,7 @@ export default async function StockPage() {
         <div className={pageStyles.wrapper}>
             <Header />
             <main className={pageStyles.container}>
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-0">Mes Cordages</h1>
-                </div>
+                <PageIntro eyebrow="Inventaire atelier" title="Mur de bobines" description="Gardez vos références, jauges et tarifs prêts pour la prochaine pose." />
 
                 <StockManager initialStrings={strings} />
             </main>

@@ -1,3 +1,5 @@
-import PlayerHomePage from './PlayerHomePage'
+import { redirect } from 'next/navigation'
 
-export default PlayerHomePage
+export default function HiddenPlayerArea() {
+    redirect('/login?role=stringer')
+}

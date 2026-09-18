@@ -3,10 +3,15 @@
 import { signOut } from 'next-auth/react'
 import { LogOut } from 'lucide-react'
 import { Button } from './button'
+import { useRouter } from 'next/navigation'
 
 export function LogoutButton() {
+    const router = useRouter()
+
     const handleLogout = async () => {
-        await signOut({ callbackUrl: '/login?role=stringer' })
+        await signOut({ redirect: false })
+        router.replace('/login?role=stringer')
+        router.refresh()
     }
 
     return (

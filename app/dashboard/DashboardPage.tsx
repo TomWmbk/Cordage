@@ -4,6 +4,7 @@ import { NewJobForm } from '@/components/new-job-form'
 import { JobRow } from '@/components/job-row'
 import { pageStyles } from '@/lib/styles'
 import { requireRole } from '@/lib/auth'
+import { PageIntro } from '@/components/page-intro'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,17 +47,21 @@ export default async function DashboardPage() {
             <Header />
 
             <main className={pageStyles.container}>
-                <h1 className="sr-only">Tableau de bord des cordages</h1>
+                <PageIntro
+                    eyebrow="File active"
+                    title="Plan de travail"
+                    description="Ajoutez une raquette, puis faites-la avancer jusqu’au retour client."
+                />
 
                 {/* New Job Section */}
-                <section className="mb-12">
+                <section className="motion-enter-delayed mb-14">
                     <NewJobForm stringReferences={stringReferences} />
                 </section>
 
                 {/* Active Jobs Section */}
                 <section>
                     <div className={pageStyles.sectionHeader}>
-                        <h2 className={pageStyles.sectionTitle}>En Cours</h2>
+                        <h2 className={pageStyles.sectionTitle}>Raquettes en cours</h2>
                         <span className={pageStyles.countBadge}>
                             {activeJobs.length}
                         </span>
@@ -65,7 +70,8 @@ export default async function DashboardPage() {
                     <div className="space-y-4">
                         {activeJobs.length === 0 ? (
                             <div className={pageStyles.emptyState}>
-                                Aucun cordage en cours. Profitez-en pour vous reposer !
+                                <p className="font-display text-2xl font-bold uppercase text-ink dark:text-white">Plan de travail dégagé</p>
+                                <p className="mt-2">La prochaine raquette apparaîtra ici.</p>
                             </div>
                         ) : (
                             activeJobs.map((job) => (
