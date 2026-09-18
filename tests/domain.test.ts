@@ -25,6 +25,16 @@ test('registration rejects roles outside the public role allowlist', () => {
     assert.deepEqual(result, { ok: false, error: 'Rôle invalide' })
 })
 
+test('player registration stays disabled while the player product is hidden', () => {
+    const result = parseRegistrationInput({
+        username: 'alice',
+        password: 'mot-de-passe-solide',
+        role: 'player',
+    })
+
+    assert.deepEqual(result, { ok: false, error: 'Rôle invalide' })
+})
+
 test('registration trims and normalizes a valid username', () => {
     const result = parseRegistrationInput({
         username: '  Alice  ',
@@ -43,9 +53,9 @@ test('registration trims and normalizes a valid username', () => {
 })
 
 test('authenticated role alone determines its destination', () => {
-    assert.equal(destinationForRole('player'), '/player/home')
+    assert.equal(destinationForRole('player'), '/login?role=stringer')
     assert.equal(destinationForRole('stringer'), '/dashboard')
-    assert.equal(destinationForRole('unexpected'), '/login')
+    assert.equal(destinationForRole('unexpected'), '/login?role=stringer')
 })
 
 test('job input rejects negative prices and unsupported sports', () => {

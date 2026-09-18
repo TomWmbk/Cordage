@@ -1,4 +1,5 @@
 export const USER_ROLES = ['stringer', 'player'] as const
+export const PUBLIC_USER_ROLES = ['stringer'] as const
 export const SPORTS = ['Tennis', 'Badminton', 'Squash'] as const
 export const STRING_TYPES = ['Monofilament', 'Multifilament', 'Boyau', 'Hybride', 'Synthétique'] as const
 
@@ -29,10 +30,9 @@ export function isUserRole(value: unknown): value is UserRole {
     return typeof value === 'string' && USER_ROLES.includes(value as UserRole)
 }
 
-export function destinationForRole(role: unknown): '/dashboard' | '/player/home' | '/login' {
+export function destinationForRole(role: unknown): '/dashboard' | '/login?role=stringer' {
     if (role === 'stringer') return '/dashboard'
-    if (role === 'player') return '/player/home'
-    return '/login'
+    return '/login?role=stringer'
 }
 
 export function parseRegistrationInput(input: unknown): ValidationResult<{
@@ -51,7 +51,7 @@ export function parseRegistrationInput(input: unknown): ValidationResult<{
     if (password.length < 8 || password.length > 128) {
         return { ok: false, error: 'Le mot de passe doit contenir entre 8 et 128 caractères' }
     }
-    if (!isUserRole(input.role)) return { ok: false, error: 'Rôle invalide' }
+    if (input.role !== 'stringer') return { ok: false, error: 'Rôle invalide' }
 
     return { ok: true, data: { username, password, role: input.role } }
 }

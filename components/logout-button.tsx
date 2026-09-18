@@ -6,7 +6,7 @@ import { Button } from './button'
 
 export function LogoutButton() {
     const handleLogout = async () => {
-        await signOut({ callbackUrl: '/login' })
+        await signOut({ callbackUrl: '/login?role=stringer' })
     }
 
     return (
@@ -14,11 +14,11 @@ export function LogoutButton() {
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-800"
+            className="h-10 w-10 rounded-sm border border-line bg-surface-strong hover:border-red-500"
             title="Se déconnecter"
             aria-label="Se déconnecter"
         >
-            <LogOut className="h-[1.2rem] w-[1.2rem] text-red-500 dark:text-red-400" />
+            <LogOut className="h-[1.1rem] w-[1.1rem] text-red-600 dark:text-red-400" />
         </Button>
     )
 }
