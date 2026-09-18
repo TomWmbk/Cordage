@@ -1,15 +1,13 @@
 import { LogoutButton } from '@/components/logout-button'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { getCurrentUserId } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { requireRole } from '@/lib/auth'
 
 export default async function PlayerHomePage() {
-    const userId = await getCurrentUserId()
-    const user = await db.user.findUnique({ where: { id: userId } })
+    const user = await requireRole('player')
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
-            <div className="absolute top-4 right-4 flex gap-2">
+        <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 pt-20 dark:bg-slate-950">
+            <div className="absolute right-4 top-4 flex gap-2">
                 <ThemeToggle />
                 <LogoutButton />
             </div>
@@ -19,7 +17,7 @@ export default async function PlayerHomePage() {
                     Bienvenue {user?.username}
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">
-                    Votre espace joueur est en cours de construction. Vous pourrez bientôt suivre vos raquettes ici.
+                    Votre compte est prêt. Le suivi détaillé de vos raquettes sera ajouté dans une prochaine version.
                 </p>
 
                 <div className="p-6 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">

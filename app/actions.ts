@@ -2,7 +2,8 @@
 
 import { db as prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { getCurrentUserId } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
+import { balanceAdjustmentForPaidToggle, parseJobInput } from '@/lib/domain'
 
 // Helper function to normalize strings (remove accents and lowercase)
 function normalizeString(str: string): string {
@@ -13,19 +14,27 @@ function normalizeString(str: string): string {
 }
 
 export async function getCustomers(query: string) {
-    if (!query || query.length < 1) return []
+    const normalizedInput = query.trim().slice(0, 80)
+    if (!normalizedInput) return []
 
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
 
     // Fetch user's customers only
     const allCustomers = await prisma.customer.findMany({
         where: { userId },
-        take: 100,
+        take: 1_000,
         orderBy: { firstName: 'asc' },
+        select: {
+            id: true,
+            firstName: true,
+            sport: true,
+            defaultTension: true,
+            defaultPrice: true,
+        },
     })
 
     // Filter client-side with normalized comparison
-    const normalizedQuery = normalizeString(query)
+    const normalizedQuery = normalizeString(normalizedInput)
     const filteredCustomers = allCustomers
         .filter(c => normalizeString(c.firstName).includes(normalizedQuery))
         .slice(0, 5)
@@ -37,76 +46,69 @@ export async function getCustomers(query: string) {
 }
 
 export async function createJob(formData: FormData) {
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
+    const parsed = parseJobInput(formData)
+    if (!parsed.ok) throw new Error(parsed.error)
+    const { firstName, sport, tension, price, standardPrice, cost, stringId } = parsed.data
 
-    const firstName = formData.get('firstName') as string
-    const sport = formData.get('sport') as string
-    const tension = parseFloat(formData.get('tension') as string)
-    const price = parseFloat(formData.get('price') as string)
-    const standardPrice = parseFloat(formData.get('standardPrice') as string)
-    const cost = parseFloat(formData.get('cost') as string) || 0
+    await prisma.$transaction(async (transaction) => {
+        const allCustomers = await transaction.customer.findMany({
+            where: { userId },
+            take: 1_000,
+        })
+        let customer = allCustomers.find((candidate) =>
+            normalizeString(candidate.firstName) === normalizeString(firstName)
+        )
 
-    if (!firstName || !sport || isNaN(tension) || isNaN(price)) {
-        throw new Error('Invalid form data')
-    }
+        if (!customer) {
+            customer = await transaction.customer.create({
+                data: {
+                    userId,
+                    firstName,
+                    sport,
+                    defaultTension: tension.toString(),
+                    defaultPrice: standardPrice,
+                },
+            })
+        } else {
+            customer = await transaction.customer.update({
+                where: { id: customer.id },
+                data: {
+                    sport,
+                    defaultTension: tension.toString(),
+                    defaultPrice: standardPrice,
+                },
+            })
+        }
 
-    // Use standardPrice if available (price before credit), otherwise current price
-    const priceToSave = !isNaN(standardPrice) ? standardPrice : price
+        const selectedString = stringId === null
+            ? null
+            : await transaction.stringReference.findFirst({
+                where: { id: stringId, userId, isInStock: true },
+                select: { brand: true, model: true, gauge: true },
+            })
 
-    // Find or Create Customer (case and accent insensitive) - only for current user
-    const allCustomers = await prisma.customer.findMany({
-        where: { userId }
-    })
-    let customer = allCustomers.find(c =>
-        normalizeString(c.firstName) === normalizeString(firstName)
-    )
+        if (stringId !== null && !selectedString) throw new Error('Cordage indisponible')
 
-    if (!customer) {
-        customer = await prisma.customer.create({
+        const stringName = selectedString
+            ? [selectedString.brand, selectedString.model, selectedString.gauge].filter(Boolean).join(' ')
+            : null
+
+        await transaction.racketJob.create({
             data: {
                 userId,
-                firstName,
-                sport,
-                defaultTension: tension.toString(),
-                defaultPrice: priceToSave,
-                balance: 0,
-            }
+                customerId: customer.id,
+                tension,
+                price,
+                cost,
+                stringName,
+            },
         })
-    } else {
-        // Update default tension, sport, and price if they changed
-        await prisma.customer.update({
+
+        await transaction.customer.update({
             where: { id: customer.id },
-            data: {
-                sport,
-                defaultTension: tension.toString(),
-                defaultPrice: priceToSave
-            }
+            data: { balance: { increment: price } },
         })
-    }
-
-    const stringName = formData.get('stringName') as string
-
-    // Create Job
-    await prisma.racketJob.create({
-        data: {
-            userId,
-            customerId: customer.id,
-            tension,
-            price,
-            isDone: false,
-            isPaid: false,
-            isReturned: false,
-            cost,
-            stringName,
-        }
-    })
-
-    // Update Customer Balance
-    await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-            balance: { increment: price }
-        }
     })
 
     revalidatePath('/')
@@ -114,60 +116,48 @@ export async function createJob(formData: FormData) {
 }
 
 export async function toggleJobStatus(jobId: number, field: 'isDone' | 'isPaid' | 'isReturned') {
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
 
-    const job = await prisma.racketJob.findFirst({
-        where: {
-            id: jobId,
-            userId  // Ensure user owns this job
+    await prisma.$transaction(async (transaction) => {
+        const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
+        if (!job) throw new Error('Cordage introuvable')
+
+        await transaction.racketJob.update({
+            where: { id: job.id },
+            data: { [field]: !job[field] },
+        })
+
+        if (field === 'isPaid') {
+            await transaction.customer.update({
+                where: { id: job.customerId },
+                data: {
+                    balance: { increment: balanceAdjustmentForPaidToggle(job.price, job.isPaid) },
+                },
+            })
         }
     })
-    if (!job) return
-
-    const newValue = !job[field]
-
-    await prisma.racketJob.update({
-        where: { id: jobId },
-        data: { [field]: newValue }
-    })
-
-    if (field === 'isPaid') {
-        const adjustment = newValue ? -job.price : job.price
-        await prisma.customer.update({
-            where: { id: job.customerId },
-            data: {
-                balance: { increment: adjustment }
-            }
-        })
-    }
 
     revalidatePath('/')
     revalidatePath('/stats')
 }
 
 export async function deleteJob(jobId: number) {
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
 
-    const job = await prisma.racketJob.findFirst({
-        where: {
-            id: jobId,
-            userId  // Ensure user owns this job
+    await prisma.$transaction(async (transaction) => {
+        const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
+        if (!job) throw new Error('Cordage introuvable')
+
+        if (!job.isPaid) {
+            await transaction.customer.update({
+                where: { id: job.customerId },
+                data: { balance: { decrement: job.price } },
+            })
         }
-    })
-    if (!job) return
 
-    // If job was not paid, we need to revert the balance addition we did at creation
-    if (!job.isPaid) {
-        await prisma.customer.update({
-            where: { id: job.customerId },
-            data: {
-                balance: { decrement: job.price }
-            }
-        })
-    }
-
-    await prisma.racketJob.delete({
-        where: { id: jobId }
+        await transaction.racketJob.delete({ where: { id: job.id } })
     })
 
     revalidatePath('/')
@@ -175,7 +165,7 @@ export async function deleteJob(jobId: number) {
 }
 
 export async function exportData() {
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
 
     const customers = await prisma.customer.findMany({
         where: { userId },

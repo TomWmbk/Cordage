@@ -7,10 +7,28 @@ import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
 import { Search, Percent, X } from 'lucide-react'
 
-export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[] }) {
+type StringReference = {
+    id: number
+    brand: string
+    model: string
+    gauge: string | null
+    price: number
+}
+
+type CustomerSuggestion = {
+    id: number
+    firstName: string
+    sport: string
+    defaultTension: string | null
+    lastPrice: number | null
+}
+
+export function NewJobForm({ stringReferences = [] }: { stringReferences?: StringReference[] }) {
     const [firstName, setFirstName] = useState('')
-    const [suggestions, setSuggestions] = useState<any[]>([])
+    const [suggestions, setSuggestions] = useState<CustomerSuggestion[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
+    const [error, setError] = useState('')
+    const [submitting, setSubmitting] = useState(false)
 
     // Form states
     const [sport, setSport] = useState('')
@@ -30,8 +48,12 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                 setSuggestions([])
                 return
             }
-            const results = await getCustomers(firstName)
-            setSuggestions(results)
+            try {
+                const results = await getCustomers(firstName)
+                setSuggestions(results)
+            } catch {
+                setSuggestions([])
+            }
         }
 
         const timeoutId = setTimeout(fetchSuggestions, 300)
@@ -48,7 +70,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [wrapperRef])
 
-    const selectCustomer = (customer: any) => {
+    const selectCustomer = (customer: CustomerSuggestion) => {
         setFirstName(customer.firstName)
         setSport(customer.sport)
         setTension(customer.defaultTension || '')
@@ -71,6 +93,8 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
     }
 
     const handleSubmit = async (formData: FormData) => {
+        setError('')
+        setSubmitting(true)
         const originalPrice = parseFloat(formData.get('price') as string)
 
         // Store the original price (before credit) to update the customer's default price
@@ -86,40 +110,39 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
             }
         }
 
-        // Add string name if selected
-        const selectedString = stringReferences.find(s => s.id.toString() === selectedStringId)
-        if (selectedString) {
-            formData.set('stringName', `${selectedString.brand} ${selectedString.model} ${selectedString.gauge || ''}`)
+        try {
+            await createJob(formData)
+            setFirstName('')
+            setSport('')
+            setTension('')
+            setPrice('')
+            setSelectedStringId('')
+            setShowCredit(false)
+            setCreditAmount('')
+        } catch (submissionError) {
+            setError(submissionError instanceof Error ? submissionError.message : 'Impossible d’ajouter ce cordage')
+        } finally {
+            setSubmitting(false)
         }
-
-        await createJob(formData)
-
-        // Reset Form
-        setFirstName('')
-        setSport('')
-        setTension('')
-        setPrice('')
-        setSelectedStringId('')
-        setShowCredit(false)
-        setCreditAmount('')
     }
 
     return (
         <Card className="mb-8 border-slate-200 shadow-sm dark:border-slate-700">
             <CardHeader className="bg-slate-50/50 pb-4 dark:bg-slate-900/50 dark:border-b dark:border-slate-800">
-                <CardTitle className="text-lg font-medium text-slate-800 flex items-center gap-2 dark:text-white">
+                <CardTitle as="h2" className="text-lg font-medium text-slate-800 flex items-center gap-2 dark:text-white">
                     Nouveau Cordage
                 </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-                <form action={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <form action={handleSubmit} className="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
 
                     {/* Name Input with Autocomplete */}
                     <div className="md:col-span-3 relative" ref={wrapperRef}>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prénom</label>
+                        <label htmlFor="job-first-name" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prénom</label>
                         <div className="relative">
                             <Input
                                 name="firstName"
+                                id="job-first-name"
                                 placeholder="Prénom..."
                                 value={firstName}
                                 onChange={(e) => {
@@ -134,16 +157,19 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                         </div>
 
                         {showSuggestions && suggestions.length > 0 && (
-                            <div className="absolute z-10 w-full bg-white border border-slate-200 rounded-md shadow-lg mt-1 max-h-60 overflow-auto dark:bg-slate-800 dark:border-slate-700">
+                            <div role="listbox" aria-label="Clients suggérés" className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
                                 {suggestions.map((c) => (
-                                    <div
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        aria-selected="false"
                                         key={c.id}
-                                        className="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm text-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"
+                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700"
                                         onClick={() => selectCustomer(c)}
                                     >
                                         <span className="font-medium">{c.firstName}</span>
                                         <span className="text-xs text-slate-400 ml-2">({c.sport})</span>
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                         )}
@@ -151,9 +177,10 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
 
                     {/* Sport */}
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Sport</label>
+                        <label htmlFor="job-sport" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Sport</label>
                         <select
                             name="sport"
+                            id="job-sport"
                             value={sport}
                             onChange={(e) => setSport(e.target.value)}
                             required
@@ -168,9 +195,10 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
 
                     {/* String Selection */}
                     <div className="md:col-span-3">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Cordage</label>
+                        <label htmlFor="job-string" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Cordage</label>
                         <select
                             name="stringId"
+                            id="job-string"
                             value={selectedStringId}
                             onChange={handleStringChange}
                             className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:ring-offset-slate-950 dark:placeholder:text-slate-400"
@@ -186,11 +214,14 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
 
                     {/* Tension */}
                     <div className="md:col-span-1">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Tension</label>
+                        <label htmlFor="job-tension" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Tension</label>
                         <Input
                             name="tension"
+                            id="job-tension"
                             type="number"
                             step="0.1"
+                            min="0.1"
+                            max="50"
                             placeholder="24"
                             value={tension}
                             onChange={(e) => setTension(e.target.value)}
@@ -200,15 +231,17 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                     </div>
 
                     {/* Price & Credit */}
-                    {/* Price & Credit */}
                     <div className="md:col-span-3">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prix</label>
+                        <label htmlFor="job-price" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Prix</label>
                         <div className="flex items-center gap-2">
                             <div className="relative w-32">
                                 <Input
                                     name="price"
+                                    id="job-price"
                                     type="number"
                                     step="0.5"
+                                    min="0"
+                                    max="10000"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
                                     className="dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500 pr-6"
@@ -224,6 +257,9 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                                         <Input
                                             type="number"
                                             step="0.5"
+                                            min="0"
+                                            max={price || undefined}
+                                            aria-label="Montant de la remise"
                                             placeholder="Rem."
                                             value={creditAmount}
                                             onChange={(e) => setCreditAmount(e.target.value)}
@@ -239,6 +275,7 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                                             setCreditAmount('')
                                         }}
                                         className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                        aria-label="Supprimer la remise"
                                     >
                                         <X className="w-3 h-3" />
                                     </Button>
@@ -258,10 +295,16 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: any[]
                         </div>
                     </div>
 
+                    {error && (
+                        <div role="alert" className="md:col-span-12 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                            {error}
+                        </div>
+                    )}
+
                     {/* Submit */}
                     <div className="md:col-span-12 mt-2">
-                        <Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700">
-                            Ajouter
+                        <Button type="submit" disabled={submitting} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700">
+                            {submitting ? 'Ajout en cours…' : 'Ajouter'}
                         </Button>
                     </div>
 

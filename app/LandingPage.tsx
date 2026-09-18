@@ -4,19 +4,16 @@ import { Wrench, User } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { destinationForRole } from '@/lib/domain'
 
 export default async function LandingPage() {
     const session = await getSession()
 
     if (session?.user) {
-        if (session.user.role === 'player') {
-            redirect('/player/home')
-        } else {
-            redirect('/dashboard')
-        }
+        redirect(destinationForRole(session.user.role))
     }
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 px-4 py-20 dark:bg-slate-950">
 
             {/* Background Decoration */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -45,11 +42,11 @@ export default async function LandingPage() {
                             <div className="mx-auto bg-emerald-100 dark:bg-emerald-900/30 p-4 rounded-full w-20 h-20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Wrench className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
                             </div>
-                            <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">Je suis Cordeur</CardTitle>
+                            <CardTitle as="h2" className="text-2xl font-bold text-slate-900 dark:text-white">Je suis Cordeur</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center pb-10 px-8">
                             <p className="text-slate-600 dark:text-slate-400">
-                                Gérez vos clients, votre stock de bobines et suivez votre chiffre d'affaires en temps réel.
+                                Gérez vos clients, votre stock de bobines et suivez votre chiffre d’affaires en temps réel.
                             </p>
                         </CardContent>
                     </Card>
@@ -62,18 +59,18 @@ export default async function LandingPage() {
                             <div className="mx-auto bg-blue-100 dark:bg-blue-900/30 p-4 rounded-full w-20 h-20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <User className="w-10 h-10 text-blue-600 dark:text-blue-400" />
                             </div>
-                            <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">Je suis Joueur</CardTitle>
+                            <CardTitle as="h2" className="text-2xl font-bold text-slate-900 dark:text-white">Je suis Joueur</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center pb-10 px-8">
                             <p className="text-slate-600 dark:text-slate-400">
-                                Suivez l'état de vos raquettes, consultez votre historique et réservez une pose.
+                                Accédez à votre espace personnel. Le suivi détaillé des raquettes arrive prochainement.
                             </p>
                         </CardContent>
                     </Card>
                 </Link>
             </div>
 
-            <footer className="absolute bottom-4 text-center text-sm text-slate-400 dark:text-slate-600">
+            <footer className="z-10 mt-12 text-center text-sm text-slate-400 dark:text-slate-600">
                 &copy; {new Date().getFullYear()} Cordage. Tous droits réservés.
             </footer>
         </div>

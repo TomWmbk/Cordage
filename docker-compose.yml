@@ -13,7 +13,7 @@ services:
     environment:
       - DATABASE_URL=file:./dev.db
       - NODE_ENV=development
-      - AUTH_SECRET=change-this-secret-key-in-production
+      - AUTH_SECRET=${AUTH_SECRET:?AUTH_SECRET must be set in .env}
       - NEXTAUTH_URL=http://localhost:8080
       - NEXTAUTH_URL_INTERNAL=http://localhost:3000
     restart: unless-stopped

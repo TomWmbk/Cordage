@@ -3,12 +3,12 @@ import { Header } from '@/components/header'
 import { NewJobForm } from '@/components/new-job-form'
 import { JobRow } from '@/components/job-row'
 import { pageStyles } from '@/lib/styles'
-import { getCurrentUserId } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
 
     // Fetch active jobs (not fully complete) - only for current user
     const activeJobs = await prisma.racketJob.findMany({
@@ -31,7 +31,14 @@ export default async function DashboardPage() {
     // Fetch string references for the form
     const stringReferences = await prisma.stringReference.findMany({
         where: { userId, isInStock: true },
-        orderBy: { brand: 'asc' }
+        orderBy: { brand: 'asc' },
+        select: {
+            id: true,
+            brand: true,
+            model: true,
+            gauge: true,
+            price: true,
+        },
     })
 
     return (
@@ -39,6 +46,7 @@ export default async function DashboardPage() {
             <Header />
 
             <main className={pageStyles.container}>
+                <h1 className="sr-only">Tableau de bord des cordages</h1>
 
                 {/* New Job Section */}
                 <section className="mb-12">
@@ -60,7 +68,7 @@ export default async function DashboardPage() {
                                 Aucun cordage en cours. Profitez-en pour vous reposer !
                             </div>
                         ) : (
-                            activeJobs.map((job: any) => (
+                            activeJobs.map((job) => (
                                 <JobRow key={job.id} job={{
                                     ...job,
                                     createdAt: job.createdAt.toISOString(),

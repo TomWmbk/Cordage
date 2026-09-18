@@ -2,8 +2,10 @@ import { Header } from '@/components/header'
 import { StockManager } from '@/components/stock-manager'
 import { getStringReferences } from '@/app/stock/actions'
 import { pageStyles } from '@/lib/styles'
+import { requireRole } from '@/lib/auth'
 
 export default async function StockPage() {
+    await requireRole('stringer')
     const strings = await getStringReferences()
 
     return (

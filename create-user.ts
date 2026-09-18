@@ -2,7 +2,7 @@ import { db } from './lib/db'
 import bcrypt from 'bcryptjs'
 
 async function main() {
-    const username = process.argv[2]
+    const username = process.argv[2]?.trim().toLowerCase()
     const password = process.argv[3]
 
     if (!username || !password) {
@@ -21,7 +21,7 @@ async function main() {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     // Create user
     const user = await db.user.create({

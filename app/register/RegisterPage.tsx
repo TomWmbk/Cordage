@@ -16,7 +16,7 @@ function RegisterForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const role = searchParams.get('role') || 'stringer'
+    const role = searchParams.get('role') === 'player' ? 'player' : 'stringer'
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -28,8 +28,8 @@ function RegisterForm() {
             return
         }
 
-        if (password.length < 6) {
-            setError('Le mot de passe doit contenir au moins 6 caractères')
+        if (password.length < 8) {
+            setError('Le mot de passe doit contenir au moins 8 caractères')
             return
         }
 
@@ -56,7 +56,7 @@ function RegisterForm() {
 
             // Succès - redirection vers login
             router.push(`/login?registered=true&role=${role}`)
-        } catch (error) {
+        } catch {
             setError('Une erreur est survenue')
         } finally {
             setLoading(false)
@@ -66,7 +66,7 @@ function RegisterForm() {
     return (
         <Card className="w-full max-w-md border-slate-200 shadow-lg dark:border-slate-800">
             <CardHeader className="space-y-1 pb-6">
-                <CardTitle className="text-2xl font-bold text-center text-slate-900 dark:text-white">
+                <CardTitle as="h2" className="text-2xl font-bold text-center text-slate-900 dark:text-white">
                     Créer un compte {role === 'player' ? 'Joueur' : 'Cordeur'}
                 </CardTitle>
                 <p className="text-sm text-center text-slate-500 dark:text-slate-400">
@@ -76,11 +76,14 @@ function RegisterForm() {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
-                            Nom d'utilisateur
+                        <label htmlFor="register-username" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                            Nom d’utilisateur
                         </label>
                         <Input
                             type="text"
+                            id="register-username"
+                            name="username"
+                            autoComplete="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Choisissez un nom d'utilisateur"
@@ -91,37 +94,43 @@ function RegisterForm() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                        <label htmlFor="register-password" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                             Mot de passe
                         </label>
                         <Input
                             type="password"
+                            id="register-password"
+                            name="password"
+                            autoComplete="new-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Minimum 6 caractères"
+                            placeholder="Minimum 8 caractères"
                             required
-                            minLength={6}
+                            minLength={8}
                             className="dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                        <label htmlFor="register-password-confirmation" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                             Confirmer le mot de passe
                         </label>
                         <Input
                             type="password"
+                            id="register-password-confirmation"
+                            name="passwordConfirmation"
+                            autoComplete="new-password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Retapez votre mot de passe"
                             required
-                            minLength={6}
+                            minLength={8}
                             className="dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                         />
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                             {error}
                         </div>
                     )}
@@ -149,6 +158,7 @@ function RegisterForm() {
 export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+            <h1 className="sr-only">Créer un compte Cordage</h1>
             <Suspense fallback={<div>Chargement...</div>}>
                 <RegisterForm />
             </Suspense>

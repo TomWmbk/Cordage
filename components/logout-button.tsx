@@ -16,6 +16,7 @@ export function LogoutButton() {
             onClick={handleLogout}
             className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-800"
             title="Se déconnecter"
+            aria-label="Se déconnecter"
         >
             <LogOut className="h-[1.2rem] w-[1.2rem] text-red-500 dark:text-red-400" />
         </Button>

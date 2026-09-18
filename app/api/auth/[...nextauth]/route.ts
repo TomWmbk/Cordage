@@ -2,8 +2,10 @@ import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import { isUserRole } from "@/lib/domain"
 
 export const authOptions: NextAuthOptions = {
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     providers: [
         CredentialsProvider({
             name: 'Credentials',
@@ -17,7 +19,7 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 const user = await db.user.findUnique({
-                    where: { username: credentials.username }
+                    where: { username: credentials.username.trim().toLowerCase() }
                 })
 
                 if (!user) {
@@ -32,6 +34,8 @@ export const authOptions: NextAuthOptions = {
                 if (!isValidPassword) {
                     return null
                 }
+
+                if (!isUserRole(user.role)) return null
 
                 return {
                     id: user.id.toString(),

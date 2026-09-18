@@ -20,7 +20,7 @@ function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const role = searchParams.get('role') || 'stringer'
+    const role = searchParams.get('role') === 'player' ? 'player' : 'stringer'
 
     useEffect(() => {
         if (searchParams.get('registered') === 'true') {
@@ -44,14 +44,10 @@ function LoginForm() {
             if (result?.error) {
                 setError('Identifiants incorrects')
             } else if (result?.ok) {
-                // Force reload to update session
-                if (role === 'player') {
-                    window.location.href = '/player/home'
-                } else {
-                    window.location.href = '/dashboard'
-                }
+                router.replace('/')
+                router.refresh()
             }
-        } catch (error) {
+        } catch {
             setError('Une erreur est survenue')
         } finally {
             setLoading(false)
@@ -61,7 +57,7 @@ function LoginForm() {
     return (
         <Card className="w-full max-w-md border-slate-200 shadow-lg dark:border-slate-800">
             <CardHeader className="space-y-1 pb-6">
-                <CardTitle className="text-2xl font-bold text-center text-slate-900 dark:text-white">
+                <CardTitle as="h2" className="text-2xl font-bold text-center text-slate-900 dark:text-white">
                     Connexion {role === 'player' ? 'Joueur' : 'Cordeur'}
                 </CardTitle>
                 <p className="text-sm text-center text-slate-500 dark:text-slate-400">
@@ -71,11 +67,14 @@ function LoginForm() {
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
-                            Nom d'utilisateur
+                        <label htmlFor="login-username" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                            Nom d’utilisateur
                         </label>
                         <Input
                             type="text"
+                            id="login-username"
+                            name="username"
+                            autoComplete="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Entrez votre nom d'utilisateur"
@@ -85,11 +84,14 @@ function LoginForm() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
+                        <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">
                             Mot de passe
                         </label>
                         <Input
                             type="password"
+                            id="login-password"
+                            name="password"
+                            autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Entrez votre mot de passe"
@@ -99,13 +101,13 @@ function LoginForm() {
                     </div>
 
                     {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
+                        <div role="status" className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
                             {success}
                         </div>
                     )}
 
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                             {error}
                         </div>
                     )}
@@ -135,6 +137,7 @@ export default function LoginPage() {
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
             <Header />
             <div className="flex-1 flex items-center justify-center p-4">
+                <h1 className="sr-only">Connexion à Cordage</h1>
                 <Suspense fallback={<div>Chargement...</div>}>
                     <LoginForm />
                 </Suspense>

@@ -1,14 +1,12 @@
 import { db as prisma } from '@/lib/db'
 import { Header } from '@/components/header'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
-import { Euro, History } from 'lucide-react'
+import type { Prisma } from '@prisma/client'
 import { JobFilters } from '@/components/job-filters'
 import { JobRow } from '@/components/job-row'
-import { pageStyles, kpiStyles } from '@/lib/styles'
+import { pageStyles } from '@/lib/styles'
 import { ExportButton } from '@/components/export-button'
 import { StatsDashboard } from '@/components/stats-dashboard'
-import { Clock, Wallet } from 'lucide-react'
-import { getCurrentUserId } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +20,7 @@ export default async function StatsPage({
     const sport = typeof params.sport === 'string' ? params.sport : undefined
     const status = typeof params.status === 'string' ? params.status : undefined
 
-    const userId = await getCurrentUserId()
+    const { id: userId } = await requireRole('stringer')
 
 
     // --- History Logic ---
@@ -34,7 +32,7 @@ export default async function StatsPage({
             .toLowerCase()
     }
 
-    const where: any = { userId }  // Always filter by current user
+    const where: Prisma.RacketJobWhereInput = { userId }
 
     // Filter by Sport (can be done at DB level)
     if (sport) {
@@ -92,13 +90,16 @@ export default async function StatsPage({
             <Header />
 
             <main className={pageStyles.container}>
-                <div className="flex items-center justify-between mb-8">
+                <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-0">Statistiques</h1>
-                    <ExportButton />
+                    <div className="w-full sm:w-auto [&>button]:w-full">
+                        <ExportButton />
+                    </div>
                 </div>
 
                 {/* Interactive Dashboard */}
                 <section className="mb-12">
+                    <h2 className="sr-only">Indicateurs clés</h2>
                     <StatsDashboard jobs={allJobs.map(job => ({
                         id: job.id,
                         createdAt: job.createdAt.toISOString(),
@@ -126,7 +127,7 @@ export default async function StatsPage({
                                 Aucun cordage trouvé avec ces filtres.
                             </div>
                         ) : (
-                            historyJobs.map((job: any) => (
+                            historyJobs.map((job) => (
                                 <JobRow key={job.id} job={{
                                     ...job,
                                     createdAt: job.createdAt.toISOString(),

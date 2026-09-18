@@ -64,7 +64,7 @@ export const headerStyles = {
 // Page Layout Styles
 export const pageStyles = {
     wrapper: "min-h-screen bg-slate-50 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-50",
-    container: "container mx-auto px-4 py-8 max-w-5xl",
+    container: "container mx-auto max-w-5xl px-4 py-6 sm:py-8",
     section: "mb-12",
     sectionHeader: "flex items-center justify-between mb-6",
     sectionTitle: "text-2xl font-bold text-slate-900 dark:text-white",

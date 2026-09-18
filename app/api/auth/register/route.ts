@@ -1,32 +1,18 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { parseRegistrationInput } from '@/lib/domain'
 
 export async function POST(request: Request) {
     try {
-        const { username, password, role } = await request.json()
-
-        // Validation
-        if (!username || !password) {
-            return NextResponse.json(
-                { error: 'Nom d\'utilisateur et mot de passe requis' },
-                { status: 400 }
-            )
+        const contentLength = Number(request.headers.get('content-length') || 0)
+        if (contentLength > 4_096) {
+            return NextResponse.json({ error: 'Requête trop volumineuse' }, { status: 413 })
         }
 
-        if (username.length < 3) {
-            return NextResponse.json(
-                { error: 'Le nom d\'utilisateur doit contenir au moins 3 caractères' },
-                { status: 400 }
-            )
-        }
-
-        if (password.length < 6) {
-            return NextResponse.json(
-                { error: 'Le mot de passe doit contenir au moins 6 caractères' },
-                { status: 400 }
-            )
-        }
+        const parsed = parseRegistrationInput(await request.json())
+        if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
+        const { username, password, role } = parsed.data
 
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await db.user.findUnique({
@@ -41,14 +27,14 @@ export async function POST(request: Request) {
         }
 
         // Hash du mot de passe
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const hashedPassword = await bcrypt.hash(password, 12)
 
         // Créer l'utilisateur
         const user = await db.user.create({
             data: {
                 username,
                 password: hashedPassword,
-                role: role || 'stringer'
+                role
             }
         })
 

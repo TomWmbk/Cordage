@@ -13,6 +13,7 @@ export function DeleteJobButton({ jobId }: { jobId: number }) {
             }}
             className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-slate-100"
             title="Supprimer"
+            aria-label="Supprimer ce cordage"
         >
             <Trash2 className="w-3.5 h-3.5" />
         </button>
