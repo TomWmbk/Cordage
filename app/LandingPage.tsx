@@ -59,10 +59,6 @@ export default async function LandingPage() {
                         <div className="absolute inset-8 rotate-3 border border-ink/15 dark:border-white/15" />
                         <div className="court-lines absolute inset-x-0 top-1/2 h-52 -translate-y-1/2 border-y border-ink/10 dark:border-white/10" />
                         <div className="absolute inset-0 p-10 sm:p-14"><RacketGraphic /></div>
-                        <div className="absolute right-0 top-9 border border-ink bg-acid px-4 py-3 text-acid-ink shadow-[4px_4px_0_var(--foreground)]">
-                            <p className="eyebrow !text-acid-ink/65">Tension cible</p>
-                            <p className="font-display text-4xl font-bold leading-none tabular-nums">24.5 <span className="text-base">KG</span></p>
-                        </div>
                         <div className="absolute bottom-12 left-0 border-l-2 border-acid bg-surface/90 px-4 py-3 backdrop-blur">
                             <p className="text-xs font-semibold text-muted">TENNIS · BADMINTON · SQUASH</p>
                         </div>

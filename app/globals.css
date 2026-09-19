@@ -143,10 +143,31 @@ select {
 }
 
 .racket-graphic__strings line {
-  opacity: .42;
+  opacity: .36;
   transform-box: fill-box;
   transform-origin: center;
-  animation: string-tension 700ms cubic-bezier(.2, .8, .2, 1) both;
+  animation: string-tension 760ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.racket-graphic__frame {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: racket-settle 900ms 80ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.racket-graphic__throat,
+.racket-graphic__grip {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: racket-build 720ms 180ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.racket-graphic__grip {
+  animation-delay: 260ms;
+}
+
+.racket-graphic__grommets {
+  animation: racket-details 500ms 520ms ease-out both;
 }
 
 .motion-enter {
@@ -159,7 +180,22 @@ select {
 
 @keyframes string-tension {
   from { opacity: 0; transform: scale(.1); }
-  to { opacity: .42; transform: scale(1); }
+  to { opacity: .36; transform: scale(1); }
+}
+
+@keyframes racket-settle {
+  from { opacity: 0; transform: scale(.94) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes racket-build {
+  from { opacity: 0; transform: scaleY(.7); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes racket-details {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes content-enter {
