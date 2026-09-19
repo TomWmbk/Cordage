@@ -143,3 +143,19 @@ export function parseStringReferenceInput(formData: FormData): ValidationResult<
 export function balanceAdjustmentForPaidToggle(price: number, currentlyPaid: boolean): number {
     return currentlyPaid ? price : -price
 }
+
+export const JOB_STATUS_FIELDS = ['isDone', 'isPaid', 'isReturned'] as const
+export type JobStatusField = (typeof JOB_STATUS_FIELDS)[number]
+
+export function isJobStatusField(value: unknown): value is JobStatusField {
+    return typeof value === 'string' && JOB_STATUS_FIELDS.includes(value as JobStatusField)
+}
+
+export function canToggleJobStatus(
+    job: { isDone: boolean; isReturned: boolean },
+    field: JobStatusField,
+): boolean {
+    if (field === 'isReturned' && !job.isReturned) return job.isDone
+    if (field === 'isDone' && job.isDone && job.isReturned) return false
+    return true
+}

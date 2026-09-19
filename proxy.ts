@@ -2,12 +2,43 @@ import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { destinationForRole } from '@/lib/domain'
+import { FixedWindowRateLimiter } from '@/lib/rate-limit'
 
 const stringerPaths = ['/dashboard', '/stock', '/stats']
+const globalForRateLimit = globalThis as unknown as {
+    cordageAuthRateLimiter?: FixedWindowRateLimiter
+}
+const authRateLimiter = globalForRateLimit.cordageAuthRateLimiter
+    ?? new FixedWindowRateLimiter(10, 15 * 60 * 1_000)
+globalForRateLimit.cordageAuthRateLimiter = authRateLimiter
+
+function clientIdentifier(request: NextRequest): string {
+    const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    return forwardedFor || request.headers.get('x-real-ip') || 'unknown-client'
+}
 
 export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname
     const requestedRole = request.nextUrl.searchParams.get('role')
+    const isAuthenticationAttempt = request.method === 'POST'
+        && (pathname === '/api/auth/register' || pathname === '/api/auth/callback/credentials')
+
+    if (isAuthenticationAttempt) {
+        const result = authRateLimiter.check(clientIdentifier(request))
+        if (!result.allowed) {
+            return NextResponse.json(
+                { error: 'Trop de tentatives. Réessayez dans quelques minutes.' },
+                {
+                    status: 429,
+                    headers: {
+                        'Cache-Control': 'no-store',
+                        'Retry-After': String(result.retryAfterSeconds),
+                    },
+                },
+            )
+        }
+    }
+
     const token = await getToken({
         req: request,
         secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
@@ -55,5 +86,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/stock/:path*', '/stats/:path*', '/player/:path*', '/login', '/register'],
+    matcher: [
+        '/dashboard/:path*',
+        '/stock/:path*',
+        '/stats/:path*',
+        '/player/:path*',
+        '/login',
+        '/register',
+        '/api/auth/register',
+        '/api/auth/callback/credentials',
+    ],
 }

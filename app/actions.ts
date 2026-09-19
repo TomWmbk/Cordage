@@ -3,7 +3,7 @@
 import { db as prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
-import { balanceAdjustmentForPaidToggle, parseJobInput } from '@/lib/domain'
+import { balanceAdjustmentForPaidToggle, canToggleJobStatus, isJobStatusField, parseJobInput } from '@/lib/domain'
 
 // Helper function to normalize strings (remove accents and lowercase)
 function normalizeString(str: string): string {
@@ -115,13 +115,18 @@ export async function createJob(formData: FormData) {
     revalidatePath('/stats')
 }
 
-export async function toggleJobStatus(jobId: number, field: 'isDone' | 'isPaid' | 'isReturned') {
+export async function toggleJobStatus(jobId: number, field: unknown) {
     const { id: userId } = await requireRole('stringer')
     if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
+    if (!isJobStatusField(field)) throw new Error('Statut invalide')
 
     await prisma.$transaction(async (transaction) => {
         const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
         if (!job) throw new Error('Cordage introuvable')
+        if (!canToggleJobStatus(job, field)) {
+            if (field === 'isReturned') throw new Error('La raquette doit être faite avant d’être rendue')
+            throw new Error('La raquette doit être marquée non rendue avant d’annuler sa réalisation')
+        }
 
         await transaction.racketJob.update({
             where: { id: job.id },

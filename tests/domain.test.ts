@@ -3,7 +3,9 @@ import test from 'node:test'
 
 import {
     balanceAdjustmentForPaidToggle,
+    canToggleJobStatus,
     destinationForRole,
+    isJobStatusField,
     parseJobInput,
     parseRegistrationInput,
     parseStringReferenceInput,
@@ -131,4 +133,23 @@ test('string reference input requires a positive finite price', () => {
 test('paid status transitions adjust the balance in opposite directions', () => {
     assert.equal(balanceAdjustmentForPaidToggle(25, false), -25)
     assert.equal(balanceAdjustmentForPaidToggle(25, true), 25)
+})
+
+test('a racket cannot be returned before the stringing is done', () => {
+    assert.equal(canToggleJobStatus({ isDone: false, isReturned: false }, 'isReturned'), false)
+    assert.equal(canToggleJobStatus({ isDone: true, isReturned: false }, 'isReturned'), true)
+})
+
+test('payment stays independent while a returned racket cannot become unfinished', () => {
+    assert.equal(canToggleJobStatus({ isDone: false, isReturned: false }, 'isPaid'), true)
+    assert.equal(canToggleJobStatus({ isDone: true, isReturned: true }, 'isDone'), false)
+    assert.equal(canToggleJobStatus({ isDone: true, isReturned: true }, 'isReturned'), true)
+})
+
+test('job status fields are runtime allowlisted at the server boundary', () => {
+    assert.equal(isJobStatusField('isDone'), true)
+    assert.equal(isJobStatusField('isPaid'), true)
+    assert.equal(isJobStatusField('isReturned'), true)
+    assert.equal(isJobStatusField('userId'), false)
+    assert.equal(isJobStatusField(undefined), false)
 })

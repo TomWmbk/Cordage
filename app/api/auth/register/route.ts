@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { parseRegistrationInput } from '@/lib/domain'
+import { Prisma } from '@prisma/client'
 
 export async function POST(request: Request) {
     try {
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
         const hashedPassword = await bcrypt.hash(password, 12)
 
         // Créer l'utilisateur
-        const user = await db.user.create({
+        await db.user.create({
             data: {
                 username,
                 password: hashedPassword,
@@ -42,11 +43,16 @@ export async function POST(request: Request) {
             {
                 success: true,
                 message: 'Compte créé avec succès',
-                userId: user.id
             },
             { status: 201 }
         )
     } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            return NextResponse.json(
+                { error: 'Ce nom d\'utilisateur est déjà utilisé' },
+                { status: 409 },
+            )
+        }
         console.error('Registration error:', error)
         return NextResponse.json(
             { error: 'Une erreur est survenue lors de la création du compte' },

@@ -5,6 +5,7 @@ import { Button } from '@/components/button'
 import { Hammer, Euro, CheckCircle2, Clock } from 'lucide-react'
 import { DeleteJobButton } from '@/components/delete-job-button'
 import { cn } from "../lib/utils"
+import { canToggleJobStatus, type JobStatusField } from '@/lib/domain'
 import { useTransition } from 'react'
 
 interface JobRowProps {
@@ -30,7 +31,10 @@ export function JobRow({ job }: JobRowProps) {
     const completedSteps = steps.filter(Boolean).length
     const progress = Math.round((completedSteps / 3) * 100)
 
-    const toggle = (field: 'isDone' | 'isPaid' | 'isReturned') => {
+    const canToggleDone = canToggleJobStatus(job, 'isDone')
+    const canToggleReturned = canToggleJobStatus(job, 'isReturned')
+
+    const toggle = (field: JobStatusField) => {
         startTransition(() => toggleJobStatus(job.id, field))
     }
 
@@ -78,7 +82,8 @@ export function JobRow({ job }: JobRowProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => toggle('isDone')}
-                    disabled={isPending}
+                    disabled={isPending || !canToggleDone}
+                    title={!canToggleDone ? 'Marquez d’abord la raquette comme non rendue' : undefined}
                     aria-label={job.isDone ? 'Marquer comme non fait' : 'Marquer comme fait'}
                     aria-pressed={job.isDone}
                     className={cn(
@@ -114,7 +119,8 @@ export function JobRow({ job }: JobRowProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => toggle('isReturned')}
-                    disabled={isPending}
+                    disabled={isPending || !canToggleReturned}
+                    title={!canToggleReturned ? 'Marquez d’abord la raquette comme faite' : undefined}
                     aria-label={job.isReturned ? 'Marquer comme non rendu' : 'Marquer comme rendu'}
                     aria-pressed={job.isReturned}
                     className={cn(
