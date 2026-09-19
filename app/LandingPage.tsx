@@ -35,7 +35,7 @@ export default async function LandingPage() {
                         <div className="mb-7 inline-flex items-center gap-3 border-l-2 border-acid pl-3">
                             <span className="eyebrow">Cockpit du cordeur</span>
                             <span className="h-px w-10 bg-ink/25 dark:bg-white/25" />
-                            <span className="text-xs font-semibold tabular-nums text-muted">V1.0</span>
+                            <span className="text-xs font-semibold tabular-nums text-muted">V2.0</span>
                         </div>
                         <h1 className="font-display text-[clamp(4.6rem,12vw,9.5rem)] font-extrabold uppercase leading-[.73] tracking-[-.045em]">
                             Chaque<br />raquette.<br />
