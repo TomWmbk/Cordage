@@ -13,16 +13,17 @@ export async function POST(request: Request) {
 
         const parsed = parseRegistrationInput(await request.json())
         if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
-        const { username, password, role } = parsed.data
+        const { username, email, password, role } = parsed.data
 
         // Vérifier si l'utilisateur existe déjà
-        const existingUser = await db.user.findUnique({
-            where: { username }
+        const existingUser = await db.user.findFirst({
+            where: { OR: [{ username }, { email }] },
+            select: { username: true, email: true },
         })
 
         if (existingUser) {
             return NextResponse.json(
-                { error: 'Ce nom d\'utilisateur est déjà utilisé' },
+                { error: existingUser.email === email ? 'Cette adresse e-mail est déjà utilisée' : 'Ce nom d\'utilisateur est déjà utilisé' },
                 { status: 409 }
             )
         }
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
         await db.user.create({
             data: {
                 username,
+                email,
                 password: hashedPassword,
                 role
             }
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
             return NextResponse.json(
-                { error: 'Ce nom d\'utilisateur est déjà utilisé' },
+                { error: 'Ce nom d’utilisateur ou cette adresse e-mail est déjà utilisé' },
                 { status: 409 },
             )
         }

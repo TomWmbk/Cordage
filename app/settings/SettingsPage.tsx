@@ -1,13 +1,14 @@
 import { Header } from '@/components/header'
 import { PageIntro } from '@/components/page-intro'
 import { PricingSettingsForm } from '@/components/pricing-settings-form'
+import { ProfileSettingsForm } from '@/components/profile-settings-form'
 import { requireRole } from '@/lib/auth'
 import { pageStyles } from '@/lib/styles'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
-    const { laborPrice } = await requireRole('stringer')
+    const { username, email, laborPrice } = await requireRole('stringer')
 
     return (
         <div className={pageStyles.wrapper}>
@@ -16,9 +17,12 @@ export default async function SettingsPage() {
                 <PageIntro
                     eyebrow="Réglages atelier"
                     title="Paramètres"
-                    description="Définissez votre prix de main-d’œuvre. Il sera ajouté au prix du cordage pour chaque nouvelle pose."
+                    description="Gérez votre identité d’atelier et votre prix de main-d’œuvre au même endroit."
                 />
-                <PricingSettingsForm laborPrice={laborPrice} />
+                <div className="grid items-start gap-6 lg:grid-cols-2">
+                    <ProfileSettingsForm username={username} email={email ?? ''} />
+                    <PricingSettingsForm laborPrice={laborPrice} />
+                </div>
             </main>
         </div>
     )

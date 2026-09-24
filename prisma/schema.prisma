@@ -32,6 +32,7 @@ model Customer {
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
+  email     String?  @unique
   password  String   // Hashed password
   role      String   @default("stringer") // "stringer" or "player"
   laborPrice Float   @default(10)

@@ -9,6 +9,7 @@ import {
     isJobStatusField,
     parseJobInput,
     parsePricingSettingsInput,
+    parseProfileSettingsInput,
     parseRegistrationInput,
     parseStringReferenceInput,
 } from '../lib/domain.ts'
@@ -22,6 +23,7 @@ function formData(values: Record<string, string>): FormData {
 test('registration rejects roles outside the public role allowlist', () => {
     const result = parseRegistrationInput({
         username: 'alice',
+        email: 'alice@example.com',
         password: 'mot-de-passe-solide',
         role: 'admin',
     })
@@ -32,6 +34,7 @@ test('registration rejects roles outside the public role allowlist', () => {
 test('player registration stays disabled while the player product is hidden', () => {
     const result = parseRegistrationInput({
         username: 'alice',
+        email: 'alice@example.com',
         password: 'mot-de-passe-solide',
         role: 'player',
     })
@@ -42,6 +45,7 @@ test('player registration stays disabled while the player product is hidden', ()
 test('registration trims and normalizes a valid username', () => {
     const result = parseRegistrationInput({
         username: '  Alice  ',
+        email: '  Alice@Example.COM  ',
         password: 'mot-de-passe-solide',
         role: 'stringer',
     })
@@ -50,9 +54,39 @@ test('registration trims and normalizes a valid username', () => {
         ok: true,
         data: {
             username: 'alice',
+            email: 'alice@example.com',
             password: 'mot-de-passe-solide',
             role: 'stringer',
         },
+    })
+})
+
+test('registration requires a valid email in its own field', () => {
+    const missingEmail = parseRegistrationInput({
+        username: 'alice',
+        password: 'mot-de-passe-solide',
+        role: 'stringer',
+    })
+    const invalidEmail = parseRegistrationInput({
+        username: 'alice',
+        email: 'alice-at-example.com',
+        password: 'mot-de-passe-solide',
+        role: 'stringer',
+    })
+
+    assert.deepEqual(missingEmail, { ok: false, error: 'Adresse e-mail invalide' })
+    assert.deepEqual(invalidEmail, { ok: false, error: 'Adresse e-mail invalide' })
+})
+
+test('profile settings normalize username and email', () => {
+    const result = parseProfileSettingsInput(formData({
+        username: '  Mon Atelier  ',
+        email: '  Contact@Atelier.FR  ',
+    }))
+
+    assert.deepEqual(result, {
+        ok: true,
+        data: { username: 'mon atelier', email: 'contact@atelier.fr' },
     })
 })
 

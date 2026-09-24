@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, LockKeyhole, UserRound } from 'lucide-react'
+import { ArrowRight, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import { Input } from '@/components/input'
 import { Button } from '@/components/button'
 import { AuthShell } from '@/components/auth-shell'
 
 export default function RegisterPage() {
     const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState('')
@@ -28,7 +29,7 @@ export default function RegisterPage() {
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role: 'stringer' }),
+                body: JSON.stringify({ username, email, password, role: 'stringer' }),
             })
             const data = await response.json()
             if (!response.ok) return setError(data.error || 'La création du compte a échoué.')
@@ -48,6 +49,13 @@ export default function RegisterPage() {
                     <div className="relative">
                         <UserRound className="absolute left-3 top-3.5 h-4 w-4 text-muted" aria-hidden="true" />
                         <Input id="register-username" name="username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Nom de l’atelier ou identifiant" className="pl-10" required minLength={3} maxLength={50} />
+                    </div>
+                </div>
+                <div>
+                    <label htmlFor="register-email" className="mb-2 block text-sm font-semibold">Adresse e-mail</label>
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted" aria-hidden="true" />
+                        <Input id="register-email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="contact@atelier.fr" className="pl-10" required maxLength={254} />
                     </div>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">

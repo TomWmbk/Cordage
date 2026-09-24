@@ -39,6 +39,7 @@ export const authOptions: NextAuthOptions = {
                 return {
                     id: user.id.toString(),
                     name: user.username,
+                    email: user.email,
                     role: user.role,
                 }
             },
@@ -51,10 +52,20 @@ export const authOptions: NextAuthOptions = {
         strategy: 'jwt',
     },
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger }) {
             if (user) {
                 token.id = user.id
                 token.role = user.role
+            }
+            if (trigger === 'update' && token.id) {
+                const currentUser = await db.user.findUnique({
+                    where: { id: Number(token.id) },
+                    select: { username: true, email: true },
+                })
+                if (currentUser) {
+                    token.name = currentUser.username
+                    token.email = currentUser.email
+                }
             }
             return token
         },

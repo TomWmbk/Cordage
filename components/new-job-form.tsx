@@ -286,7 +286,6 @@ export function NewJobForm({
                                     type="number"
                                     value={finalPrice.toFixed(2)}
                                     readOnly
-                                    aria-describedby="job-price-breakdown"
                                     className="pr-6 font-display text-lg font-semibold tabular-nums"
                                 />
                                 <span className="absolute right-2 top-3 text-sm text-muted">€</span>
@@ -335,10 +334,6 @@ export function NewJobForm({
                                 </Button>
                             )}
                         </div>
-                        <p id="job-price-breakdown" className="mt-2 text-xs text-muted">
-                            Pose {laborPrice.toFixed(2)} €{stringSource === 'shop' ? ` + cordage ${stringPrice.toFixed(2)} €` : ''}
-                            {appliedCredit > 0 ? ` − remise ${appliedCredit.toFixed(2)} €` : ''}
-                        </p>
                     </div>
 
                     {error && (

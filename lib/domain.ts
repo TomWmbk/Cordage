@@ -39,16 +39,21 @@ export function destinationForRole(role: unknown): '/dashboard' | '/login?role=s
 
 export function parseRegistrationInput(input: unknown): ValidationResult<{
     username: string
+    email: string
     password: string
     role: UserRole
 }> {
     if (!isRecord(input)) return { ok: false, error: 'Requête invalide' }
 
     const username = typeof input.username === 'string' ? input.username.trim().toLowerCase() : ''
+    const email = typeof input.email === 'string' ? input.email.trim().toLowerCase() : ''
     const password = typeof input.password === 'string' ? input.password : ''
 
     if (username.length < 3 || username.length > 50) {
         return { ok: false, error: 'Le nom d’utilisateur doit contenir entre 3 et 50 caractères' }
+    }
+    if (!isValidEmail(email)) {
+        return { ok: false, error: 'Adresse e-mail invalide' }
     }
     if (password.length < 8 || password.length > 128) {
         return { ok: false, error: 'Le mot de passe doit contenir entre 8 et 128 caractères' }
@@ -57,7 +62,28 @@ export function parseRegistrationInput(input: unknown): ValidationResult<{
         return { ok: false, error: 'Rôle invalide' }
     }
 
-    return { ok: true, data: { username, password, role: 'stringer' } }
+    return { ok: true, data: { username, email, password, role: 'stringer' } }
+}
+
+function isValidEmail(value: string): boolean {
+    return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+export function parseProfileSettingsInput(formData: FormData): ValidationResult<{
+    username: string
+    email: string
+}> {
+    const usernameValue = formData.get('username')
+    const emailValue = formData.get('email')
+    const username = typeof usernameValue === 'string' ? usernameValue.trim().toLowerCase() : ''
+    const email = typeof emailValue === 'string' ? emailValue.trim().toLowerCase() : ''
+
+    if (username.length < 3 || username.length > 50) {
+        return { ok: false, error: 'Le nom d’utilisateur doit contenir entre 3 et 50 caractères' }
+    }
+    if (!isValidEmail(email)) return { ok: false, error: 'Adresse e-mail invalide' }
+
+    return { ok: true, data: { username, email } }
 }
 
 export function parseJobInput(formData: FormData): ValidationResult<{

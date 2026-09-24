@@ -22,7 +22,7 @@ export async function getCurrentUser() {
 
     const user = await db.user.findUnique({
         where: { id: userId },
-        select: { id: true, username: true, role: true, laborPrice: true },
+        select: { id: true, username: true, email: true, role: true, laborPrice: true },
     })
 
     if (!user) redirect('/login')
