@@ -9,7 +9,7 @@ import { PageIntro } from '@/components/page-intro'
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-    const { id: userId } = await requireRole('stringer')
+    const { id: userId, laborPrice } = await requireRole('stringer')
 
     // Fetch active jobs (not fully complete) - only for current user
     const activeJobs = await prisma.racketJob.findMany({
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
 
                 {/* New Job Section */}
                 <section className="motion-enter-delayed mb-14">
-                    <NewJobForm stringReferences={stringReferences} />
+                    <NewJobForm stringReferences={stringReferences} laborPrice={laborPrice} />
                 </section>
 
                 {/* Active Jobs Section */}

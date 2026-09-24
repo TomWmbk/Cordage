@@ -2,9 +2,11 @@ export const USER_ROLES = ['stringer', 'player'] as const
 export const PUBLIC_USER_ROLES = ['stringer'] as const
 export const SPORTS = ['Tennis', 'Badminton', 'Squash'] as const
 export const STRING_TYPES = ['Monofilament', 'Multifilament', 'Boyau', 'Hybride', 'Synthétique'] as const
+export const STRING_SOURCES = ['shop', 'player'] as const
 
 export type UserRole = (typeof USER_ROLES)[number]
 export type Sport = (typeof SPORTS)[number]
+export type StringSource = (typeof STRING_SOURCES)[number]
 
 type ValidationResult<T> =
     | { ok: true; data: T }
@@ -62,16 +64,21 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     firstName: string
     sport: Sport
     tension: number
-    price: number
-    standardPrice: number
+    stringSource: StringSource
+    playerStringName: string | null
+    discount: number
     cost: number
     stringId: number | null
 }> {
     const firstName = boundedText(formData.get('firstName'), 80)
     const sport = formData.get('sport')
     const tension = finiteNumber(formData.get('tension'))
-    const price = finiteNumber(formData.get('price'))
-    const standardPrice = finiteNumber(formData.get('standardPrice')) ?? price
+    const stringSource = formData.get('stringSource')
+    const playerStringNameValue = formData.get('playerStringName')
+    const playerStringName = typeof playerStringNameValue === 'string' && playerStringNameValue.trim()
+        ? playerStringNameValue.trim().slice(0, 120)
+        : null
+    const discount = finiteNumber(formData.get('discount')) ?? 0
     const cost = finiteNumber(formData.get('cost')) ?? 0
     const rawStringId = finiteNumber(formData.get('stringId'))
 
@@ -82,10 +89,14 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     if (tension === null || tension <= 0 || tension > 50) {
         return { ok: false, error: 'Tension invalide' }
     }
-    if (price === null || price < 0 || price > 10_000 || standardPrice === null || standardPrice < price || standardPrice > 10_000) {
-        return { ok: false, error: 'Prix invalide' }
+    if (typeof stringSource !== 'string' || !STRING_SOURCES.includes(stringSource as StringSource)) {
+        return { ok: false, error: 'Source du cordage invalide' }
     }
+    if (discount < 0 || discount > 10_000) return { ok: false, error: 'Remise invalide' }
     if (cost < 0 || cost > 10_000) return { ok: false, error: 'Coût invalide' }
+    if (stringSource === 'shop' && (rawStringId === null || !Number.isInteger(rawStringId) || rawStringId <= 0)) {
+        return { ok: false, error: 'Cordage atelier requis' }
+    }
     if (rawStringId !== null && (!Number.isInteger(rawStringId) || rawStringId <= 0)) {
         return { ok: false, error: 'Cordage invalide' }
     }
@@ -96,12 +107,36 @@ export function parseJobInput(formData: FormData): ValidationResult<{
             firstName,
             sport: sport as Sport,
             tension,
-            price,
-            standardPrice,
+            stringSource: stringSource as StringSource,
+            playerStringName,
+            discount,
             cost,
-            stringId: rawStringId,
+            stringId: stringSource === 'shop' ? rawStringId : null,
         },
     }
+}
+
+export function calculateJobPrice({
+    laborPrice,
+    stringPrice,
+    stringSource,
+    discount,
+}: {
+    laborPrice: number
+    stringPrice: number | null
+    stringSource: StringSource
+    discount: number
+}): number {
+    const standardPrice = laborPrice + (stringSource === 'shop' ? (stringPrice ?? 0) : 0)
+    return Math.max(0, Math.round((standardPrice - discount) * 100) / 100)
+}
+
+export function parsePricingSettingsInput(formData: FormData): ValidationResult<{ laborPrice: number }> {
+    const laborPrice = finiteNumber(formData.get('laborPrice'))
+    if (laborPrice === null || laborPrice < 0 || laborPrice > 10_000) {
+        return { ok: false, error: 'Prix de pose invalide' }
+    }
+    return { ok: true, data: { laborPrice } }
 }
 
 export function parseStringReferenceInput(formData: FormData): ValidationResult<{

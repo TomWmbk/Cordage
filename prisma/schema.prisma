@@ -34,6 +34,7 @@ model User {
   username  String   @unique
   password  String   // Hashed password
   role      String   @default("stringer") // "stringer" or "player"
+  laborPrice Float   @default(10)
   createdAt DateTime @default(now())
   
   // Multi-tenant relations
@@ -60,6 +61,7 @@ model RacketJob {
   
   cost       Float   @default(0) // Cost of the string/materials
   stringName String? // Name of the string used (snapshot)
+  stringSource String @default("shop") // "shop" or "player"
   
   @@index([userId])
 }

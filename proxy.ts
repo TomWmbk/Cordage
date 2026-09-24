@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 import { destinationForRole } from '@/lib/domain'
 import { FixedWindowRateLimiter } from '@/lib/rate-limit'
 
-const stringerPaths = ['/dashboard', '/stock', '/stats']
+const stringerPaths = ['/dashboard', '/stock', '/stats', '/settings']
 const globalForRateLimit = globalThis as unknown as {
     cordageAuthRateLimiter?: FixedWindowRateLimiter
 }
@@ -90,6 +90,7 @@ export const config = {
         '/dashboard/:path*',
         '/stock/:path*',
         '/stats/:path*',
+        '/settings/:path*',
         '/player/:path*',
         '/login',
         '/register',

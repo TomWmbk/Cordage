@@ -135,7 +135,7 @@ export function StockManager({ initialStrings }: { initialStrings: StringReferen
                             </div>
 
                             <div className="mt-5 flex items-end justify-between border-t border-line pt-4">
-                                <span className="eyebrow">Tarif pose</span>
+                                <span className="eyebrow">Prix du cordage</span>
                                 <span className="metric-number font-display text-3xl font-bold leading-none text-ink dark:text-white">{str.price.toFixed(2)} €</span>
                             </div>
                         </CardContent>
@@ -206,7 +206,7 @@ export function StockManager({ initialStrings }: { initialStrings: StringReferen
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="string-price" className="text-sm font-semibold text-ink dark:text-white">Prix de vente (€)</label>
+                                <label htmlFor="string-price" className="text-sm font-semibold text-ink dark:text-white">Prix du cordage (€)</label>
                                 <Input id="string-price" name="price" type="number" min="0.01" max="10000" step="0.01" defaultValue={editingString?.price} placeholder="25.00" required />
                             </div>
 

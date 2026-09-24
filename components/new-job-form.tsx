@@ -5,7 +5,7 @@ import { createJob, getCustomers } from '@/app/actions'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
-import { Search, Percent, X, Crosshair, Plus } from 'lucide-react'
+import { Search, Percent, X, Crosshair, Plus, PackageCheck, UserRound } from 'lucide-react'
 
 type StringReference = {
     id: number
@@ -20,10 +20,15 @@ type CustomerSuggestion = {
     firstName: string
     sport: string
     defaultTension: string | null
-    lastPrice: number | null
 }
 
-export function NewJobForm({ stringReferences = [] }: { stringReferences?: StringReference[] }) {
+export function NewJobForm({
+    stringReferences = [],
+    laborPrice,
+}: {
+    stringReferences?: StringReference[]
+    laborPrice: number
+}) {
     const [firstName, setFirstName] = useState('')
     const [suggestions, setSuggestions] = useState<CustomerSuggestion[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
@@ -33,14 +38,20 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
     // Form states
     const [sport, setSport] = useState('')
     const [tension, setTension] = useState('')
-    const [price, setPrice] = useState('')
     const [selectedStringId, setSelectedStringId] = useState('')
+    const [stringSource, setStringSource] = useState<'shop' | 'player'>('shop')
 
     // Credit logic
     const [showCredit, setShowCredit] = useState(false)
     const [creditAmount, setCreditAmount] = useState('')
 
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const selectedString = stringReferences.find((reference) => reference.id.toString() === selectedStringId)
+    const stringPrice = stringSource === 'shop' ? selectedString?.price ?? 0 : 0
+    const standardPrice = Math.round((laborPrice + stringPrice) * 100) / 100
+    const parsedCredit = Number(creditAmount)
+    const appliedCredit = showCredit && Number.isFinite(parsedCredit) ? Math.max(0, parsedCredit) : 0
+    const finalPrice = Math.max(0, Math.round((standardPrice - appliedCredit) * 100) / 100)
 
     useEffect(() => {
         const fetchSuggestions = async () => {
@@ -74,49 +85,25 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
         setFirstName(customer.firstName)
         setSport(customer.sport)
         setTension(customer.defaultTension || '')
-        if (customer.lastPrice) {
-            setPrice(customer.lastPrice.toString())
-        }
         setShowSuggestions(false)
     }
 
     const handleStringChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const stringId = e.target.value
         setSelectedStringId(stringId)
-
-        const selectedString = stringReferences.find(s => s.id.toString() === stringId)
-        if (selectedString) {
-            setPrice(selectedString.price.toString())
-        } else {
-            setPrice('')
-        }
     }
 
     const handleSubmit = async (formData: FormData) => {
         setError('')
         setSubmitting(true)
-        const originalPrice = parseFloat(formData.get('price') as string)
-
-        // Store the original price (before credit) to update the customer's default price
-        if (!isNaN(originalPrice)) {
-            formData.set('standardPrice', originalPrice.toString())
-        }
-
-        if (showCredit && creditAmount) {
-            const credit = parseFloat(creditAmount)
-            if (!isNaN(originalPrice) && !isNaN(credit)) {
-                const finalPrice = Math.max(0, originalPrice - credit)
-                formData.set('price', finalPrice.toString())
-            }
-        }
 
         try {
             await createJob(formData)
             setFirstName('')
             setSport('')
             setTension('')
-            setPrice('')
             setSelectedStringId('')
+            setStringSource('shop')
             setShowCredit(false)
             setCreditAmount('')
         } catch (submissionError) {
@@ -136,6 +123,49 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
             </CardHeader>
             <CardContent className="p-5 sm:p-6">
                 <form action={handleSubmit} className="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
+
+                    <fieldset className="md:col-span-12">
+                        <legend className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Provenance du cordage</legend>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <label className="cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="stringSource"
+                                    value="shop"
+                                    checked={stringSource === 'shop'}
+                                    onChange={() => {
+                                        setStringSource('shop')
+                                        setShowCredit(false)
+                                        setCreditAmount('')
+                                    }}
+                                    className="peer sr-only"
+                                />
+                                <span className="flex min-h-16 items-center gap-3 border border-line bg-surface-strong px-4 py-3 text-sm transition-colors peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-acid dark:peer-checked:border-acid dark:peer-checked:bg-acid dark:peer-checked:text-acid-ink">
+                                    <PackageCheck className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                    <span><strong className="block">Bobine de l’atelier</strong><span className="text-xs opacity-70">Pose + prix du cordage</span></span>
+                                </span>
+                            </label>
+                            <label className="cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="stringSource"
+                                    value="player"
+                                    checked={stringSource === 'player'}
+                                    onChange={() => {
+                                        setStringSource('player')
+                                        setSelectedStringId('')
+                                        setShowCredit(false)
+                                        setCreditAmount('')
+                                    }}
+                                    className="peer sr-only"
+                                />
+                                <span className="flex min-h-16 items-center gap-3 border border-line bg-surface-strong px-4 py-3 text-sm transition-colors peer-checked:border-ink peer-checked:bg-ink peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-acid dark:peer-checked:border-acid dark:peer-checked:bg-acid dark:peer-checked:text-acid-ink">
+                                    <UserRound className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                    <span><strong className="block">Bobine du joueur</strong><span className="text-xs opacity-70">Pose uniquement</span></span>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
 
                     {/* Name Input with Autocomplete */}
                     <div className="md:col-span-3 relative" ref={wrapperRef}>
@@ -196,21 +226,36 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* String Selection */}
                     <div className="md:col-span-3">
-                        <label htmlFor="job-string" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Cordage</label>
-                        <select
-                            name="stringId"
-                            id="job-string"
-                            value={selectedStringId}
-                            onChange={handleStringChange}
-                            className="flex h-11 w-full rounded-sm border border-line bg-surface-strong px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:text-white"
-                        >
-                            <option value="">Sélectionner...</option>
-                            {stringReferences.map((str) => (
-                                <option key={str.id} value={str.id}>
-                                    {str.brand} {str.model} {str.gauge}
-                                </option>
-                            ))}
-                        </select>
+                        {stringSource === 'shop' ? (
+                            <>
+                                <label htmlFor="job-string" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Cordage atelier</label>
+                                <select
+                                    name="stringId"
+                                    id="job-string"
+                                    value={selectedStringId}
+                                    onChange={handleStringChange}
+                                    required
+                                    className="flex h-11 w-full rounded-sm border border-line bg-surface-strong px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:text-white"
+                                >
+                                    <option value="">Sélectionner...</option>
+                                    {stringReferences.map((str) => (
+                                        <option key={str.id} value={str.id}>
+                                            {str.brand} {str.model} {str.gauge}
+                                        </option>
+                                    ))}
+                                </select>
+                            </>
+                        ) : (
+                            <>
+                                <label htmlFor="player-string-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Cordage du joueur</label>
+                                <Input
+                                    name="playerStringName"
+                                    id="player-string-name"
+                                    maxLength={120}
+                                    placeholder="Marque / modèle (facultatif)"
+                                />
+                            </>
+                        )}
                     </div>
 
                     {/* Tension */}
@@ -233,21 +278,16 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
 
                     {/* Price & Credit */}
                     <div className="md:col-span-3">
-                        <label htmlFor="job-price" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Prix</label>
+                        <label htmlFor="job-price" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Total calculé</label>
                         <div className="flex items-center gap-2">
                             <div className="relative w-32">
                                 <Input
-                                    name="price"
                                     id="job-price"
                                     type="number"
-                                    step="0.5"
-                                    min="0"
-                                    max="10000"
-                                    value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
+                                    value={finalPrice.toFixed(2)}
+                                    readOnly
+                                    aria-describedby="job-price-breakdown"
                                     className="pr-6 font-display text-lg font-semibold tabular-nums"
-                                    placeholder="25"
-                                    required
                                 />
                                 <span className="absolute right-2 top-3 text-sm text-muted">€</span>
                             </div>
@@ -256,10 +296,11 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                 <div className="flex items-center gap-1 animate-in slide-in-from-left-2 duration-200">
                                     <div className="relative w-20">
                                         <Input
+                                            name="discount"
                                             type="number"
                                             step="0.5"
                                             min="0"
-                                            max={price || undefined}
+                                            max={standardPrice}
                                             aria-label="Montant de la remise"
                                             placeholder="Rem."
                                             value={creditAmount}
@@ -294,6 +335,10 @@ export function NewJobForm({ stringReferences = [] }: { stringReferences?: Strin
                                 </Button>
                             )}
                         </div>
+                        <p id="job-price-breakdown" className="mt-2 text-xs text-muted">
+                            Pose {laborPrice.toFixed(2)} €{stringSource === 'shop' ? ` + cordage ${stringPrice.toFixed(2)} €` : ''}
+                            {appliedCredit > 0 ? ` − remise ${appliedCredit.toFixed(2)} €` : ''}
+                        </p>
                     </div>
 
                     {error && (

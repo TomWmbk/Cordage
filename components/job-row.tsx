@@ -2,7 +2,7 @@
 
 import { toggleJobStatus } from '@/app/actions'
 import { Button } from '@/components/button'
-import { Hammer, Euro, CheckCircle2, Clock } from 'lucide-react'
+import { Hammer, Euro, CheckCircle2, Clock, PackageCheck, UserRound } from 'lucide-react'
 import { DeleteJobButton } from '@/components/delete-job-button'
 import { cn } from "../lib/utils"
 import { canToggleJobStatus, type JobStatusField } from '@/lib/domain'
@@ -21,6 +21,8 @@ interface JobRowProps {
         isDone: boolean
         isPaid: boolean
         isReturned: boolean
+        stringName: string | null
+        stringSource: string
     }
 }
 
@@ -60,6 +62,15 @@ export function JobRow({ job }: JobRowProps) {
                         <span>{job.tension} kg</span>
                         <span>•</span>
                         <span>{job.price} €</span>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1">
+                            {job.stringSource === 'player'
+                                ? <UserRound className="h-3 w-3" aria-hidden="true" />
+                                : <PackageCheck className="h-3 w-3" aria-hidden="true" />}
+                            {job.stringSource === 'player'
+                                ? `Bobine joueur${job.stringName && job.stringName !== 'Bobine du joueur' ? ` · ${job.stringName}` : ''}`
+                                : job.stringName || 'Cordage atelier'}
+                        </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />

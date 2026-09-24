@@ -37,6 +37,7 @@ yarn-error.log*
 
 # local SQLite data
 *.db
+*.db-journal
 
 # vercel
 .vercel

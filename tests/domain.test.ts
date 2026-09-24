@@ -3,10 +3,12 @@ import test from 'node:test'
 
 import {
     balanceAdjustmentForPaidToggle,
+    calculateJobPrice,
     canToggleJobStatus,
     destinationForRole,
     isJobStatusField,
     parseJobInput,
+    parsePricingSettingsInput,
     parseRegistrationInput,
     parseStringReferenceInput,
 } from '../lib/domain.ts'
@@ -61,38 +63,51 @@ test('authenticated role alone determines its destination', () => {
 })
 
 test('job input rejects negative prices and unsupported sports', () => {
-    const negativePrice = parseJobInput(formData({
+    const excessiveDiscount = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Tennis',
         tension: '24',
-        price: '-2',
-        standardPrice: '25',
+        stringSource: 'shop',
+        stringId: '1',
+        discount: '-2',
         cost: '5',
     }))
     const unsupportedSport = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Football',
         tension: '24',
-        price: '25',
-        standardPrice: '25',
+        stringSource: 'player',
+        discount: '0',
         cost: '5',
     }))
 
-    assert.deepEqual(negativePrice, { ok: false, error: 'Prix invalide' })
+    assert.deepEqual(excessiveDiscount, { ok: false, error: 'Remise invalide' })
     assert.deepEqual(unsupportedSport, { ok: false, error: 'Sport invalide' })
 })
 
-test('job input rejects a discounted price above its standard price', () => {
-    const result = parseJobInput(formData({
+test('job input requires an atelier reference only for an atelier string', () => {
+    const missingAtelierString = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Tennis',
         tension: '24',
-        price: '30',
-        standardPrice: '25',
-        cost: '5',
+        stringSource: 'shop',
+        discount: '0',
+    }))
+    const playerString = parseJobInput(formData({
+        firstName: 'Alice',
+        sport: 'Tennis',
+        tension: '24',
+        stringSource: 'player',
+        playerStringName: '  Wilson Revolve 1.25  ',
+        discount: '0',
     }))
 
-    assert.deepEqual(result, { ok: false, error: 'Prix invalide' })
+    assert.deepEqual(missingAtelierString, { ok: false, error: 'Cordage atelier requis' })
+    assert.equal(playerString.ok, true)
+    if (playerString.ok) {
+        assert.equal(playerString.data.stringId, null)
+        assert.equal(playerString.data.playerStringName, 'Wilson Revolve 1.25')
+    }
 })
 
 test('job input returns bounded numeric values for a valid form', () => {
@@ -100,8 +115,8 @@ test('job input returns bounded numeric values for a valid form', () => {
         firstName: '  Alice  ',
         sport: 'Badminton',
         tension: '12.5',
-        price: '22',
-        standardPrice: '25',
+        stringSource: 'shop',
+        discount: '3',
         cost: '4.5',
         stringId: '12',
     }))
@@ -112,11 +127,37 @@ test('job input returns bounded numeric values for a valid form', () => {
             firstName: 'Alice',
             sport: 'Badminton',
             tension: 12.5,
-            price: 22,
-            standardPrice: 25,
+            stringSource: 'shop',
+            playerStringName: null,
+            discount: 3,
             cost: 4.5,
             stringId: 12,
         },
+    })
+})
+
+test('atelier pricing adds labor and string while player reel pricing charges labor only', () => {
+    assert.equal(calculateJobPrice({ laborPrice: 12, stringPrice: 8, stringSource: 'shop', discount: 0 }), 20)
+    assert.equal(calculateJobPrice({ laborPrice: 12, stringPrice: null, stringSource: 'player', discount: 0 }), 12)
+    assert.equal(calculateJobPrice({ laborPrice: 12, stringPrice: 8, stringSource: 'shop', discount: 3.5 }), 16.5)
+})
+
+test('job pricing never becomes negative after a discount', () => {
+    assert.equal(calculateJobPrice({ laborPrice: 10, stringPrice: null, stringSource: 'player', discount: 25 }), 0)
+})
+
+test('pricing settings accept a bounded pose price and reject invalid values', () => {
+    assert.deepEqual(parsePricingSettingsInput(formData({ laborPrice: '12.5' })), {
+        ok: true,
+        data: { laborPrice: 12.5 },
+    })
+    assert.deepEqual(parsePricingSettingsInput(formData({ laborPrice: '-1' })), {
+        ok: false,
+        error: 'Prix de pose invalide',
+    })
+    assert.deepEqual(parsePricingSettingsInput(formData({ laborPrice: 'NaN' })), {
+        ok: false,
+        error: 'Prix de pose invalide',
     })
 })
 

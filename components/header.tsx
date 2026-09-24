@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, LayoutDashboard, Menu, Package, User, X } from 'lucide-react'
+import { BarChart3, LayoutDashboard, Menu, Package, Settings, User, X } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { ThemeToggle } from './theme-toggle'
 import { LogoutButton } from './logout-button'
@@ -14,6 +14,7 @@ const stringerLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/stock', label: 'Stock', icon: Package },
     { href: '/stats', label: 'Stats', icon: BarChart3 },
+    { href: '/settings', label: 'Paramètres', icon: Settings },
 ]
 
 export function Header() {
@@ -77,7 +78,7 @@ export function Header() {
 
             {menuOpen && links.length > 0 && (
                 <nav id="mobile-navigation" aria-label="Navigation mobile" className="motion-enter border-t border-line bg-surface px-4 py-3 md:hidden">
-                    <div className="mx-auto grid max-w-6xl grid-cols-3 gap-1">
+                    <div className="mx-auto grid max-w-6xl grid-cols-4 gap-1">
                         {links.map(({ href, label, icon: Icon }) => (
                             <Link
                                 key={href}

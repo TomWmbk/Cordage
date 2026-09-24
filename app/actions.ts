@@ -3,7 +3,7 @@
 import { db as prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
-import { balanceAdjustmentForPaidToggle, canToggleJobStatus, isJobStatusField, parseJobInput } from '@/lib/domain'
+import { balanceAdjustmentForPaidToggle, calculateJobPrice, canToggleJobStatus, isJobStatusField, parseJobInput } from '@/lib/domain'
 
 // Helper function to normalize strings (remove accents and lowercase)
 function normalizeString(str: string): string {
@@ -29,7 +29,6 @@ export async function getCustomers(query: string) {
             firstName: true,
             sport: true,
             defaultTension: true,
-            defaultPrice: true,
         },
     })
 
@@ -39,19 +38,43 @@ export async function getCustomers(query: string) {
         .filter(c => normalizeString(c.firstName).includes(normalizedQuery))
         .slice(0, 5)
 
-    return filteredCustomers.map(c => ({
-        ...c,
-        lastPrice: c.defaultPrice
-    }))
+    return filteredCustomers
 }
 
 export async function createJob(formData: FormData) {
-    const { id: userId } = await requireRole('stringer')
+    const { id: userId, laborPrice } = await requireRole('stringer')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { firstName, sport, tension, price, standardPrice, cost, stringId } = parsed.data
+    const { firstName, sport, tension, stringSource, playerStringName, discount, cost, stringId } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
+        const selectedString = stringSource === 'player' || stringId === null
+            ? null
+            : await transaction.stringReference.findFirst({
+                where: { id: stringId, userId, isInStock: true },
+                select: { brand: true, model: true, gauge: true, price: true },
+            })
+
+        if (stringSource === 'shop' && !selectedString) throw new Error('Cordage indisponible')
+
+        const stringName = stringSource === 'player'
+            ? playerStringName || 'Bobine du joueur'
+            : selectedString
+                ? [selectedString.brand, selectedString.model, selectedString.gauge].filter(Boolean).join(' ')
+                : null
+        const standardPrice = calculateJobPrice({
+            laborPrice,
+            stringPrice: selectedString?.price ?? null,
+            stringSource,
+            discount: 0,
+        })
+        const price = calculateJobPrice({
+            laborPrice,
+            stringPrice: selectedString?.price ?? null,
+            stringSource,
+            discount,
+        })
+
         const allCustomers = await transaction.customer.findMany({
             where: { userId },
             take: 1_000,
@@ -81,19 +104,6 @@ export async function createJob(formData: FormData) {
             })
         }
 
-        const selectedString = stringId === null
-            ? null
-            : await transaction.stringReference.findFirst({
-                where: { id: stringId, userId, isInStock: true },
-                select: { brand: true, model: true, gauge: true },
-            })
-
-        if (stringId !== null && !selectedString) throw new Error('Cordage indisponible')
-
-        const stringName = selectedString
-            ? [selectedString.brand, selectedString.model, selectedString.gauge].filter(Boolean).join(' ')
-            : null
-
         await transaction.racketJob.create({
             data: {
                 userId,
@@ -102,6 +112,7 @@ export async function createJob(formData: FormData) {
                 price,
                 cost,
                 stringName,
+                stringSource,
             },
         })
 
