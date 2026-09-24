@@ -30,7 +30,7 @@ export function ProfileSettingsForm({ username, email }: { username: string; ema
     }
 
     return (
-        <section className="motion-enter-delayed">
+        <section id="profile" className="motion-enter-delayed scroll-mt-24">
             <Card className="sport-panel">
                 <CardHeader className="border-b border-line bg-ink px-5 py-4 text-white dark:bg-surface-strong">
                     <CardTitle as="h2" className="flex items-center gap-2 font-display text-2xl font-bold uppercase tracking-tight">

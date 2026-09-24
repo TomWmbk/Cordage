@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, LayoutDashboard, Menu, Package, Settings, User, X } from 'lucide-react'
+import { BarChart3, LayoutDashboard, Menu, Package, Settings, X } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { ThemeToggle } from './theme-toggle'
-import { LogoutButton } from './logout-button'
+import { AccountMenu } from './account-menu'
 import { cn } from '@/lib/utils'
 import { BrandLockup } from './brand-mark'
 
@@ -53,13 +53,7 @@ export function Header() {
                 <div className="flex shrink-0 items-center gap-2">
                     <ThemeToggle />
                     {session && (
-                        <>
-                            <span className="hidden items-center gap-2 border-l border-line pl-3 text-xs font-semibold text-muted lg:flex">
-                                <User className="h-4 w-4" aria-hidden="true" />
-                                {session.user?.name}
-                            </span>
-                            <LogoutButton />
-                        </>
+                        <AccountMenu username={session.user?.name || 'Mon compte'} />
                     )}
                     {links.length > 0 && (
                         <button
