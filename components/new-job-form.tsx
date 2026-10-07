@@ -259,39 +259,33 @@ export function NewJobForm({
                     </div>
 
                     {/* Tension */}
-            <div className="md:col-span-1">
-                <label
-                    htmlFor="job-tension"
-                    className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted"
-                >
-                    Tension
-                </label>
+                    <div className="md:col-span-1">
+                        <label
+                            htmlFor="job-tension"
+                            className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted"
+                        >
+                            Tension
+                        </label>
 
-                <Input
-                    name="tension"
-                    id="job-tension"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="24 ou 24/23"
-                    value={tension}
-                    onChange={(e) => {
-                        const value = e.target.value
+                        <Input
+                            name="tension"
+                            id="job-tension"
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="23 ou 23/24"
+                            value={tension}
+                            onChange={(e) => {
+                                const value = e.target.value
 
-                        // Autorise uniquement :
-                        // 24
-                        // 24.5
-                        // 24/
-                        // 24/23
-                        // 24.5/23.5
-                        if (/^\d{0,2}([.,]\d?)?(\/\d{0,2}([.,]\d?)?)?$/.test(value)) {
-                            setTension(value)
-                        }
-                    }}
-                    pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
-                    className="font-display text-lg font-semibold tabular-nums"
-                    required
-                />
-            </div>
+                                if (/^\d{0,2}([.,]\d?)?(\/\d{0,2}([.,]\d?)?)?$/.test(value)) {
+                                    setTension(value)
+                                }
+                            }}
+                            pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
+                            className="font-display text-lg font-semibold tabular-nums"
+                            required
+                        />
+                    </div>
 
                     {/* Price & Credit */}
                     <div className="md:col-span-3">

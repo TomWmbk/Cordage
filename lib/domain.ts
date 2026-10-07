@@ -27,7 +27,27 @@ function finiteNumber(value: FormDataEntryValue | null): number | null {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
 }
+function parseTension(value: FormDataEntryValue | null): string | null {
+    if (typeof value !== 'string' || value.trim() === '') return null
 
+    const normalized = value.trim().replace(',', '.')
+
+    if (!/^\d{1,2}(\.\d+)?(\/\d{1,2}(\.\d+)?)?$/.test(normalized)) {
+        return null
+    }
+
+    const tensions = normalized.split('/').map(Number)
+
+    if (tensions.some(t => !Number.isFinite(t) || t <= 0 || t > 50)) {
+        return null
+    }
+
+    if (tensions.length === 2 && tensions[0] > tensions[1]) {
+        return null
+    }
+
+    return normalized
+}
 export function isUserRole(value: unknown): value is UserRole {
     return typeof value === 'string' && USER_ROLES.includes(value as UserRole)
 }
@@ -89,7 +109,7 @@ export function parseProfileSettingsInput(formData: FormData): ValidationResult<
 export function parseJobInput(formData: FormData): ValidationResult<{
     firstName: string
     sport: Sport
-    tension: number
+    tension: string
     stringSource: StringSource
     playerStringName: string | null
     discount: number
@@ -98,7 +118,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
 }> {
     const firstName = boundedText(formData.get('firstName'), 80)
     const sport = formData.get('sport')
-    const tension = finiteNumber(formData.get('tension'))
+    const tension = parseTension(formData.get('tension'))
     const stringSource = formData.get('stringSource')
     const playerStringNameValue = formData.get('playerStringName')
     const playerStringName = typeof playerStringNameValue === 'string' && playerStringNameValue.trim()
@@ -112,7 +132,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     if (typeof sport !== 'string' || !SPORTS.includes(sport as Sport)) {
         return { ok: false, error: 'Sport invalide' }
     }
-    if (tension === null || tension <= 0 || tension > 50) {
+    if (tension === null || tension <= '0' || tension > '50') {
         return { ok: false, error: 'Tension invalide' }
     }
     if (typeof stringSource !== 'string' || !STRING_SOURCES.includes(stringSource as StringSource)) {

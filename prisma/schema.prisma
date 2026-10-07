@@ -51,7 +51,7 @@ model RacketJob {
   customerId     Int
   customer       Customer  @relation(fields: [customerId], references: [id])
   
-  tension        Float
+  tension        String
   price          Float
   
   createdAt      DateTime  @default(now())
