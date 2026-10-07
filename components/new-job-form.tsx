@@ -5,7 +5,7 @@ import { createJob, getCustomers } from '@/app/actions'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
-import { Search, Percent, X, Crosshair, Plus, PackageCheck, UserRound } from 'lucide-react'
+import { Search, X, Crosshair, Plus, PackageCheck, UserRound } from 'lucide-react'
 
 type StringReference = {
     id: number
@@ -37,7 +37,7 @@ export function NewJobForm({
 
     // Form states
     const [sport, setSport] = useState('')
-    const [tension, setTension] = useState('')
+    const [tension, setTension] = useState("");
     const [selectedStringId, setSelectedStringId] = useState('')
     const [stringSource, setStringSource] = useState<'shop' | 'player'>('shop')
 
@@ -259,22 +259,39 @@ export function NewJobForm({
                     </div>
 
                     {/* Tension */}
-                    <div className="md:col-span-1">
-                        <label htmlFor="job-tension" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Tension</label>
-                        <Input
-                            name="tension"
-                            id="job-tension"
-                            type="number"
-                            step="0.1"
-                            min="0.1"
-                            max="50"
-                            placeholder="24"
-                            value={tension}
-                            onChange={(e) => setTension(e.target.value)}
-                            className="font-display text-lg font-semibold tabular-nums"
-                            required
-                        />
-                    </div>
+            <div className="md:col-span-1">
+                <label
+                    htmlFor="job-tension"
+                    className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                    Tension
+                </label>
+
+                <Input
+                    name="tension"
+                    id="job-tension"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="24 ou 24/23"
+                    value={tension}
+                    onChange={(e) => {
+                        const value = e.target.value
+
+                        // Autorise uniquement :
+                        // 24
+                        // 24.5
+                        // 24/
+                        // 24/23
+                        // 24.5/23.5
+                        if (/^\d{0,2}([.,]\d?)?(\/\d{0,2}([.,]\d?)?)?$/.test(value)) {
+                            setTension(value)
+                        }
+                    }}
+                    pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
+                    className="font-display text-lg font-semibold tabular-nums"
+                    required
+                />
+            </div>
 
                     {/* Price & Credit */}
                     <div className="md:col-span-3">
@@ -293,7 +310,7 @@ export function NewJobForm({
 
                             {showCredit ? (
                                 <div className="flex items-center gap-1 animate-in slide-in-from-left-2 duration-200">
-                                    <div className="relative w-20">
+                                    <div className="relative w-24">
                                         <Input
                                             name="discount"
                                             type="number"
@@ -301,12 +318,14 @@ export function NewJobForm({
                                             min="0"
                                             max={standardPrice}
                                             aria-label="Montant de la remise"
-                                            placeholder="Rem."
+                                            placeholder="Remise"
                                             value={creditAmount}
                                             onChange={(e) => setCreditAmount(e.target.value)}
-                                            className="px-2 text-sm"
+                                            className="pr-6 text-sm"
                                         />
+                                        <span className="absolute right-2 top-3 text-sm text-muted">€</span>
                                     </div>
+
                                     <Button
                                         type="button"
                                         variant="ghost"
@@ -318,19 +337,18 @@ export function NewJobForm({
                                         className="h-8 w-8 text-muted hover:text-ink dark:hover:text-white"
                                         aria-label="Supprimer la remise"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <X className="h-3 w-3" />
                                     </Button>
                                 </div>
                             ) : (
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    size="icon"
                                     onClick={() => setShowCredit(true)}
-                                        className="h-11 w-11 text-muted hover:text-ink dark:hover:text-acid"
+                                    className="h-11 px-3 text-sm font-semibold text-muted hover:text-ink dark:hover:text-acid"
                                     title="Ajouter une remise"
                                 >
-                                    <Percent className="w-4 h-4" />
+                                    - €
                                 </Button>
                             )}
                         </div>
