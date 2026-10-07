@@ -15,7 +15,7 @@ interface JobRowProps {
             firstName: string
             sport: string
         }
-        tension: number
+        tension: string
         price: number
         createdAt: Date | string
         isDone: boolean
