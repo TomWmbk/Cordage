@@ -160,7 +160,7 @@ test('job input returns bounded numeric values for a valid form', () => {
         data: {
             firstName: 'Alice',
             sport: 'Badminton',
-            tension: 12.5,
+            tension: '12.5',
             stringSource: 'shop',
             playerStringName: null,
             discount: 3,

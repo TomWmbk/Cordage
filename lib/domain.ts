@@ -132,7 +132,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     if (typeof sport !== 'string' || !SPORTS.includes(sport as Sport)) {
         return { ok: false, error: 'Sport invalide' }
     }
-    if (tension === null || tension <= '0' || tension > '50') {
+    if (tension === null) {
         return { ok: false, error: 'Tension invalide' }
     }
     if (typeof stringSource !== 'string' || !STRING_SOURCES.includes(stringSource as StringSource)) {
