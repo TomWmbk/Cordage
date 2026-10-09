@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createJob, getCustomers } from '@/app/actions'
+import { useRouter } from 'next/navigation'
+import { createJob, getCustomers, updateJob } from '@/app/actions'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
-import { Search, X, Crosshair, Plus, PackageCheck, UserRound } from 'lucide-react'
+import { Search, X, Crosshair, Plus, PackageCheck, UserRound, Pencil, Save } from 'lucide-react'
 
 type StringReference = {
     id: number
@@ -22,29 +23,45 @@ type CustomerSuggestion = {
     defaultTension: string | null
 }
 
+export type EditableJob = {
+    id: number
+    firstName: string
+    sport: string
+    tension: string
+    stringSource: 'shop' | 'player'
+    stringId: number | null
+    playerStringName: string | null
+    discount: number
+}
+
 export function NewJobForm({
     stringReferences = [],
     laborPrice,
+    editingJob,
 }: {
     stringReferences?: StringReference[]
     laborPrice: number
+    editingJob?: EditableJob
 }) {
-    const [firstName, setFirstName] = useState('')
+    const router = useRouter()
+    const [firstName, setFirstName] = useState(editingJob?.firstName ?? '')
     const [suggestions, setSuggestions] = useState<CustomerSuggestion[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [error, setError] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
     // Form states
-    const [sport, setSport] = useState('')
-    const [tension, setTension] = useState("");
-    const [selectedStringId, setSelectedStringId] = useState('')
-    const [stringSource, setStringSource] = useState<'shop' | 'player'>('shop')
+    const [sport, setSport] = useState(editingJob?.sport ?? '')
+    const [tension, setTension] = useState(editingJob?.tension ?? '')
+    const [selectedStringId, setSelectedStringId] = useState(editingJob?.stringId?.toString() ?? '')
+    const [stringSource, setStringSource] = useState<'shop' | 'player'>(editingJob?.stringSource ?? 'shop')
 
     // Credit logic
-    const [showCredit, setShowCredit] = useState(false)
-    const [creditAmount, setCreditAmount] = useState('')
+    const [showCredit, setShowCredit] = useState(Boolean(editingJob?.discount))
+    const [creditAmount, setCreditAmount] = useState(editingJob?.discount ? editingJob.discount.toString() : '')
 
+    const formRef = useRef<HTMLFormElement>(null)
+    const cardRef = useRef<HTMLDivElement>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const tensionInputRef = useRef<HTMLInputElement>(null)
     const canAddSecondTension = /^\d{1,2}([.,]\d)?$/.test(tension)
@@ -54,6 +71,11 @@ export function NewJobForm({
     const parsedCredit = Number(creditAmount)
     const appliedCredit = showCredit && Number.isFinite(parsedCredit) ? Math.max(0, parsedCredit) : 0
     const finalPrice = Math.max(0, Math.round((standardPrice - appliedCredit) * 100) / 100)
+    const isDirty = Boolean(firstName || sport || tension || selectedStringId || stringSource !== 'shop' || showCredit)
+
+    useEffect(() => {
+        if (editingJob) cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, [editingJob])
 
     useEffect(() => {
         const fetchSuggestions = async () => {
@@ -95,36 +117,56 @@ export function NewJobForm({
         setSelectedStringId(stringId)
     }
 
+    const resetForm = () => {
+        formRef.current?.reset()
+        setFirstName('')
+        setSport('')
+        setTension('')
+        setSelectedStringId('')
+        setStringSource('shop')
+        setShowCredit(false)
+        setCreditAmount('')
+        setError('')
+    }
+
+    const handleCancel = () => {
+        if (editingJob) router.replace('/dashboard', { scroll: false })
+        else resetForm()
+    }
+
     const handleSubmit = async (formData: FormData) => {
         setError('')
         setSubmitting(true)
 
         try {
-            await createJob(formData)
-            setFirstName('')
-            setSport('')
-            setTension('')
-            setSelectedStringId('')
-            setStringSource('shop')
-            setShowCredit(false)
-            setCreditAmount('')
+            if (editingJob) {
+                await updateJob(editingJob.id, formData)
+                router.replace('/dashboard', { scroll: false })
+            } else {
+                await createJob(formData)
+                resetForm()
+            }
         } catch (submissionError) {
-            setError(submissionError instanceof Error ? submissionError.message : 'Impossible d’ajouter ce cordage')
+            setError(submissionError instanceof Error ? submissionError.message : 'Impossible d’enregistrer ce cordage')
         } finally {
             setSubmitting(false)
         }
     }
 
     return (
-        <Card className="sport-panel mb-8">
+        <Card ref={cardRef} className="sport-panel mb-8 scroll-mt-24">
             <CardHeader className="border-b border-line bg-ink px-5 py-4 text-white dark:bg-surface-strong">
                 <CardTitle as="h2" className="flex items-center justify-between gap-3 font-display text-2xl font-bold uppercase tracking-tight">
-                    <span className="flex items-center gap-2"><Crosshair className="h-5 w-5 text-acid" /> Nouvelle pose</span>
-                    <span className="hidden text-xs font-semibold tracking-[.16em] text-stone-400 sm:inline">Entrée atelier</span>
+                    {editingJob ? (
+                        <span className="flex items-center gap-2"><Pencil className="h-5 w-5 text-acid" /> Modifier la pose</span>
+                    ) : (
+                        <span className="flex items-center gap-2"><Crosshair className="h-5 w-5 text-acid" /> Nouvelle pose</span>
+                    )}
+                    <span className="hidden text-xs font-semibold tracking-[.16em] text-stone-400 sm:inline">{editingJob ? editingJob.firstName : 'Entrée atelier'}</span>
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-5 sm:p-6">
-                <form action={handleSubmit} className="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
+                <form ref={formRef} action={handleSubmit} className="grid grid-cols-1 items-end gap-4 md:grid-cols-12">
 
                     <fieldset className="md:col-span-12">
                         <legend className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Provenance du cordage</legend>
@@ -254,6 +296,7 @@ export function NewJobForm({
                                     name="playerStringName"
                                     id="player-string-name"
                                     maxLength={120}
+                                    defaultValue={editingJob?.playerStringName ?? ''}
                                     placeholder="Marque / modèle (facultatif)"
                                 />
                             </>
@@ -375,10 +418,18 @@ export function NewJobForm({
                     )}
 
                     {/* Submit */}
-                    <div className="md:col-span-12 mt-2">
-                        <Button type="submit" disabled={submitting} size="lg" className="w-full gap-2">
-                            <Plus className="h-4 w-4" />
-                            {submitting ? 'Mise en file…' : 'Ajouter au plan de travail'}
+                    <div className="md:col-span-12 mt-2 flex flex-col-reverse gap-3 sm:flex-row">
+                        {(isDirty || editingJob) && (
+                            <Button type="button" variant="outline" size="lg" onClick={handleCancel} disabled={submitting} className="gap-2 sm:w-48">
+                                <X className="h-4 w-4" />
+                                Annuler
+                            </Button>
+                        )}
+                        <Button type="submit" disabled={submitting} size="lg" className="flex-1 gap-2">
+                            {editingJob ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            {submitting
+                                ? 'Enregistrement…'
+                                : editingJob ? 'Enregistrer les modifications' : 'Ajouter au plan de travail'}
                         </Button>
                     </div>
 

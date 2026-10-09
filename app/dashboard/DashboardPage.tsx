@@ -1,6 +1,6 @@
 import { db as prisma } from '@/lib/db'
 import { Header } from '@/components/header'
-import { NewJobForm } from '@/components/new-job-form'
+import { NewJobForm, type EditableJob } from '@/components/new-job-form'
 import { JobRow } from '@/components/job-row'
 import { pageStyles } from '@/lib/styles'
 import { requireRole } from '@/lib/auth'
@@ -8,8 +8,13 @@ import { PageIntro } from '@/components/page-intro'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ edit?: string | string[] }>
+}) {
     const { id: userId, laborPrice } = await requireRole('stringer')
+    const editId = Number((await searchParams).edit)
 
     // Fetch active jobs (not fully complete) - only for current user
     const activeJobs = await prisma.racketJob.findMany({
@@ -42,6 +47,11 @@ export default async function DashboardPage() {
         },
     })
 
+    const jobToEdit = Number.isSafeInteger(editId) && editId > 0
+        ? await prisma.racketJob.findFirst({ where: { id: editId, userId }, include: { customer: true } })
+        : null
+    const editingJob = jobToEdit ? toEditableJob(jobToEdit, stringReferences, laborPrice) : undefined
+
     return (
         <div className={pageStyles.wrapper}>
             <Header />
@@ -55,7 +65,7 @@ export default async function DashboardPage() {
 
                 {/* New Job Section */}
                 <section className="motion-enter-delayed mb-14">
-                    <NewJobForm stringReferences={stringReferences} laborPrice={laborPrice} />
+                    <NewJobForm key={editingJob?.id ?? 'new'} stringReferences={stringReferences} laborPrice={laborPrice} editingJob={editingJob} />
                 </section>
 
                 {/* Active Jobs Section */}
@@ -91,4 +101,29 @@ export default async function DashboardPage() {
             </main>
         </div>
     )
+}
+
+function toEditableJob(
+    job: { id: number; tension: string; price: number; stringName: string | null; stringSource: string; customer: { firstName: string; sport: string } },
+    stringReferences: { id: number; brand: string; model: string; gauge: string | null; price: number }[],
+    laborPrice: number,
+): EditableJob {
+    const stringSource = job.stringSource === 'player' ? 'player' : 'shop'
+    // Le job ne garde que le nom du cordage : on retrouve la référence par son nom
+    const reference = stringSource === 'shop'
+        ? stringReferences.find((r) => [r.brand, r.model, r.gauge].filter(Boolean).join(' ') === job.stringName)
+        : undefined
+    const canDeriveDiscount = stringSource === 'player' || reference !== undefined
+    const standardPrice = laborPrice + (reference?.price ?? 0)
+
+    return {
+        id: job.id,
+        firstName: job.customer.firstName,
+        sport: job.customer.sport,
+        tension: job.tension,
+        stringSource,
+        stringId: reference?.id ?? null,
+        playerStringName: stringSource === 'player' && job.stringName !== 'Bobine du joueur' ? job.stringName : null,
+        discount: canDeriveDiscount ? Math.max(0, Math.round((standardPrice - job.price) * 100) / 100) : 0,
+    }
 }
