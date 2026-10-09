@@ -46,6 +46,8 @@ export function NewJobForm({
     const [creditAmount, setCreditAmount] = useState('')
 
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const tensionInputRef = useRef<HTMLInputElement>(null)
+    const canAddSecondTension = /^\d{1,2}([.,]\d)?$/.test(tension)
     const selectedString = stringReferences.find((reference) => reference.id.toString() === selectedStringId)
     const stringPrice = stringSource === 'shop' ? selectedString?.price ?? 0 : 0
     const standardPrice = Math.round((laborPrice + stringPrice) * 100) / 100
@@ -267,24 +269,42 @@ export function NewJobForm({
                             Tension
                         </label>
 
-                        <Input
-                            name="tension"
-                            id="job-tension"
-                            type="text"
-                            inputMode="decimal"
-                            placeholder="23 ou 23/24"
-                            value={tension}
-                            onChange={(e) => {
-                                const value = e.target.value
+                        <div className="relative">
+                            <Input
+                                ref={tensionInputRef}
+                                name="tension"
+                                id="job-tension"
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="23 ou 23/24"
+                                value={tension}
+                                onChange={(e) => {
+                                    const value = e.target.value
 
-                                if (/^\d{0,2}([.,]\d?)?(\/\d{0,2}([.,]\d?)?)?$/.test(value)) {
-                                    setTension(value)
-                                }
-                            }}
-                            pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
-                            className="font-display text-lg font-semibold tabular-nums"
-                            required
-                        />
+                                    if (/^\d{0,2}([.,]\d?)?(\/\d{0,2}([.,]\d?)?)?$/.test(value)) {
+                                        setTension(value)
+                                    }
+                                }}
+                                pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
+                                className="pr-14 font-display text-lg font-semibold tabular-nums"
+                                required
+                            />
+                            {canAddSecondTension && (
+                                <button
+                                    type="button"
+                                    aria-label="Ajouter une seconde tension"
+                                    // Garde le focus sur l'input pour ne pas fermer le clavier mobile
+                                    onPointerDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                        setTension((value) => value.includes('/') ? value : `${value}/`)
+                                        tensionInputRef.current?.focus()
+                                    }}
+                                    className="absolute inset-y-1 right-1 flex w-11 touch-manipulation items-center justify-center rounded-sm border border-line bg-surface font-display text-xl font-bold text-ink transition-colors hover:border-ink active:bg-acid active:text-acid-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:text-white dark:hover:border-acid"
+                                >
+                                    /
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Price & Credit */}
