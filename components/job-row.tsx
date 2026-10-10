@@ -2,7 +2,8 @@
 
 import { toggleJobStatus } from '@/app/actions'
 import { Button } from '@/components/button'
-import { Hammer, Euro, CheckCircle2, Clock, PackageCheck, UserRound } from 'lucide-react'
+import { Hammer, Euro, CheckCircle2, Clock, PackageCheck, UserRound, Pencil } from 'lucide-react'
+import Link from 'next/link'
 import { DeleteJobButton } from '@/components/delete-job-button'
 import { cn } from "../lib/utils"
 import { canToggleJobStatus, type JobStatusField } from '@/lib/domain'
@@ -54,6 +55,15 @@ export function JobRow({ job }: JobRowProps) {
                         <h3 className="font-display text-xl font-bold uppercase tracking-tight text-ink dark:text-white">
                             {job.customer.firstName}
                         </h3>
+                        <Link
+                            href={`/dashboard?edit=${job.id}`}
+                            scroll={false}
+                            className="p-1 text-muted transition-colors hover:bg-acid/20 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid dark:hover:text-white"
+                            title="Modifier"
+                            aria-label="Modifier ce cordage"
+                        >
+                            <Pencil className="h-3.5 w-3.5" />
+                        </Link>
                         <DeleteJobButton jobId={job.id} />
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">

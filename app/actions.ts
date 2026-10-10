@@ -41,68 +41,59 @@ export async function getCustomers(query: string) {
     return filteredCustomers
 }
 
+type Transaction = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+type JobInput = Extract<ReturnType<typeof parseJobInput>, { ok: true }>['data']
+
+async function pricedJob(transaction: Transaction, userId: number, laborPrice: number, input: JobInput) {
+    const { stringSource, stringId, playerStringName, discount } = input
+    const selectedString = stringSource === 'player' || stringId === null
+        ? null
+        : await transaction.stringReference.findFirst({
+            where: { id: stringId, userId, isInStock: true },
+            select: { brand: true, model: true, gauge: true, price: true },
+        })
+
+    if (stringSource === 'shop' && !selectedString) throw new Error('Cordage indisponible')
+
+    const stringName = stringSource === 'player'
+        ? playerStringName || 'Bobine du joueur'
+        : selectedString
+            ? [selectedString.brand, selectedString.model, selectedString.gauge].filter(Boolean).join(' ')
+            : null
+    const pricing = { laborPrice, stringPrice: selectedString?.price ?? null, stringSource }
+
+    return {
+        stringName,
+        standardPrice: calculateJobPrice({ ...pricing, discount: 0 }),
+        price: calculateJobPrice({ ...pricing, discount }),
+    }
+}
+
+async function upsertCustomer(transaction: Transaction, userId: number, input: JobInput, standardPrice: number) {
+    const { firstName, sport, tension } = input
+    const allCustomers = await transaction.customer.findMany({
+        where: { userId },
+        take: 1_000,
+    })
+    const customer = allCustomers.find((candidate) =>
+        normalizeString(candidate.firstName) === normalizeString(firstName)
+    )
+    const data = { sport, defaultTension: tension, defaultPrice: standardPrice }
+
+    return customer
+        ? transaction.customer.update({ where: { id: customer.id }, data })
+        : transaction.customer.create({ data: { userId, firstName, ...data } })
+}
+
 export async function createJob(formData: FormData) {
     const { id: userId, laborPrice } = await requireRole('stringer')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { firstName, sport, tension, stringSource, playerStringName, discount, cost, stringId } = parsed.data
+    const { tension, stringSource, cost } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
-        const selectedString = stringSource === 'player' || stringId === null
-            ? null
-            : await transaction.stringReference.findFirst({
-                where: { id: stringId, userId, isInStock: true },
-                select: { brand: true, model: true, gauge: true, price: true },
-            })
-
-        if (stringSource === 'shop' && !selectedString) throw new Error('Cordage indisponible')
-
-        const stringName = stringSource === 'player'
-            ? playerStringName || 'Bobine du joueur'
-            : selectedString
-                ? [selectedString.brand, selectedString.model, selectedString.gauge].filter(Boolean).join(' ')
-                : null
-        const standardPrice = calculateJobPrice({
-            laborPrice,
-            stringPrice: selectedString?.price ?? null,
-            stringSource,
-            discount: 0,
-        })
-        const price = calculateJobPrice({
-            laborPrice,
-            stringPrice: selectedString?.price ?? null,
-            stringSource,
-            discount,
-        })
-
-        const allCustomers = await transaction.customer.findMany({
-            where: { userId },
-            take: 1_000,
-        })
-        let customer = allCustomers.find((candidate) =>
-            normalizeString(candidate.firstName) === normalizeString(firstName)
-        )
-
-        if (!customer) {
-            customer = await transaction.customer.create({
-                data: {
-                    userId,
-                    firstName,
-                    sport,
-                    defaultTension: tension.toString(),
-                    defaultPrice: standardPrice,
-                },
-            })
-        } else {
-            customer = await transaction.customer.update({
-                where: { id: customer.id },
-                data: {
-                    sport,
-                    defaultTension: tension.toString(),
-                    defaultPrice: standardPrice,
-                },
-            })
-        }
+        const { stringName, standardPrice, price } = await pricedJob(transaction, userId, laborPrice, parsed.data)
+        const customer = await upsertCustomer(transaction, userId, parsed.data, standardPrice)
 
         await transaction.racketJob.create({
             data: {
@@ -119,6 +110,48 @@ export async function createJob(formData: FormData) {
         await transaction.customer.update({
             where: { id: customer.id },
             data: { balance: { increment: price } },
+        })
+    })
+
+    revalidatePath('/')
+    revalidatePath('/stats')
+}
+
+export async function updateJob(jobId: number, formData: FormData) {
+    const { id: userId, laborPrice } = await requireRole('stringer')
+    if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
+    const parsed = parseJobInput(formData)
+    if (!parsed.ok) throw new Error(parsed.error)
+    const { tension, stringSource } = parsed.data
+
+    await prisma.$transaction(async (transaction) => {
+        const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
+        if (!job) throw new Error('Cordage introuvable')
+
+        const { stringName, standardPrice, price } = await pricedJob(transaction, userId, laborPrice, parsed.data)
+        const customer = await upsertCustomer(transaction, userId, parsed.data, standardPrice)
+
+        // Le solde client ne contient que les poses non payées
+        if (!job.isPaid) {
+            await transaction.customer.update({
+                where: { id: job.customerId },
+                data: { balance: { decrement: job.price } },
+            })
+            await transaction.customer.update({
+                where: { id: customer.id },
+                data: { balance: { increment: price } },
+            })
+        }
+
+        await transaction.racketJob.update({
+            where: { id: job.id },
+            data: {
+                customerId: customer.id,
+                tension,
+                price,
+                stringName,
+                stringSource,
+            },
         })
     })
 
