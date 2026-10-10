@@ -212,7 +212,7 @@ export function NewJobForm({
                     </fieldset>
 
                     {/* Name Input with Autocomplete */}
-                    <div className="md:col-span-3 relative" ref={wrapperRef}>
+                    <div className="md:col-span-2 relative" ref={wrapperRef}>
                         <label htmlFor="job-first-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Client</label>
                         <div className="relative">
                             <Input
@@ -304,7 +304,7 @@ export function NewJobForm({
                     </div>
 
                     {/* Tension */}
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                         <label
                             htmlFor="job-tension"
                             className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted"
@@ -329,7 +329,7 @@ export function NewJobForm({
                                     }
                                 }}
                                 pattern="\d{1,2}([.,]\d+)?(\/\d{1,2}([.,]\d+)?)?"
-                                className="pr-14 font-display text-lg font-semibold tabular-nums"
+                                className={`${canAddSecondTension ? 'pr-14' : ''} font-display text-lg font-semibold tabular-nums`}
                                 required
                             />
                             {canAddSecondTension && (
