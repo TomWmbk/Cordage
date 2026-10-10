@@ -17,4 +17,4 @@ services:
       - NEXTAUTH_URL=http://localhost:8080
       - NEXTAUTH_URL_INTERNAL=http://localhost:3000
     restart: unless-stopped
-    command: npm run dev
+    command: sh -c "npx prisma migrate deploy && npm run dev"
