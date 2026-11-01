@@ -89,7 +89,7 @@ export async function createJob(formData: FormData) {
     const { id: userId, laborPrice } = await requireRole('stringer')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { tension, stringSource, cost } = parsed.data
+    const { tension, racketBrand, stringSource, cost } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
         const { stringName, standardPrice, price } = await pricedJob(transaction, userId, laborPrice, parsed.data)
@@ -100,6 +100,7 @@ export async function createJob(formData: FormData) {
                 userId,
                 customerId: customer.id,
                 tension,
+                racketBrand,
                 price,
                 cost,
                 stringName,
@@ -122,7 +123,7 @@ export async function updateJob(jobId: number, formData: FormData) {
     if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { tension, stringSource } = parsed.data
+    const { tension, racketBrand, stringSource } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
         const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
@@ -148,6 +149,7 @@ export async function updateJob(jobId: number, formData: FormData) {
             data: {
                 customerId: customer.id,
                 tension,
+                racketBrand,
                 price,
                 stringName,
                 stringSource,

@@ -70,7 +70,7 @@ export default async function LandingPage() {
                         {[
                             { icon: TimerReset, value: '3 états', label: 'pose · payé · rendu' },
                             { icon: PackageCheck, value: 'Stock net', label: 'références disponibles' },
-                            { icon: Gauge, value: 'Vue directe', label: 'activité et bénéfice' },
+                            { icon: Gauge, value: 'Vue directe', label: 'activité et CA' },
                         ].map(({ icon: Icon, value, label }) => (
                             <div key={value} className="flex items-center gap-4 border-white/10 py-6 md:border-r md:px-6 first:pl-0 last:border-0">
                                 <Icon className="h-6 w-6 text-acid" />

@@ -117,6 +117,14 @@ export function JobFilters() {
                 >
                     Rendu
                 </Button>
+                <Button
+                    aria-pressed={currentStatus === 'returned-unpaid'}
+                    variant={currentStatus === 'returned-unpaid' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => router.push(pathname + '?' + createQueryString('status', 'returned-unpaid'))}
+                >
+                    Fait · rendu · non payé
+                </Button>
             </div>
         </div>
     )

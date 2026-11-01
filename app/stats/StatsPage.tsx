@@ -8,6 +8,7 @@ import { ExportButton } from '@/components/export-button'
 import { StatsDashboard } from '@/components/stats-dashboard'
 import { requireRole } from '@/lib/auth'
 import { PageIntro } from '@/components/page-intro'
+import { getJobStatusWhere } from '@/lib/domain'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,20 +43,7 @@ export default async function StatsPage({
         }
     }
 
-    // Filter by Status
-    if (status === 'active') {
-        where.OR = [
-            { isDone: false },
-            { isPaid: false },
-            { isReturned: false }
-        ]
-    } else if (status === 'done') {
-        where.isDone = true
-    } else if (status === 'paid') {
-        where.isPaid = true
-    } else if (status === 'returned') {
-        where.isReturned = true
-    }
+    Object.assign(where, getJobStatusWhere(status))
 
     // Fetch ALL jobs for statistics - only for current user
     const allJobs = await prisma.racketJob.findMany({

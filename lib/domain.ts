@@ -1,6 +1,7 @@
 export const USER_ROLES = ['stringer', 'player'] as const
 export const PUBLIC_USER_ROLES = ['stringer'] as const
 export const SPORTS = ['Tennis', 'Badminton', 'Squash'] as const
+export const RACKET_BRANDS = ['Babolat', 'Wilson', 'Head', 'Yonex', 'Tecnifibre', 'Dunlop', 'Prince', 'Artengo', 'Victor', 'Li-Ning', 'Carlton'] as const
 export const STRING_TYPES = ['Monofilament', 'Multifilament', 'Boyau', 'Hybride', 'Synthétique'] as const
 export const STRING_SOURCES = ['shop', 'player'] as const
 
@@ -109,6 +110,7 @@ export function parseProfileSettingsInput(formData: FormData): ValidationResult<
 export function parseJobInput(formData: FormData): ValidationResult<{
     firstName: string
     sport: Sport
+    racketBrand: string
     tension: string
     stringSource: StringSource
     playerStringName: string | null
@@ -118,6 +120,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
 }> {
     const firstName = boundedText(formData.get('firstName'), 80)
     const sport = formData.get('sport')
+    const racketBrand = boundedText(formData.get('racketBrand'), 80)
     const tension = parseTension(formData.get('tension'))
     const stringSource = formData.get('stringSource')
     const playerStringNameValue = formData.get('playerStringName')
@@ -132,6 +135,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     if (typeof sport !== 'string' || !SPORTS.includes(sport as Sport)) {
         return { ok: false, error: 'Sport invalide' }
     }
+    if (!racketBrand) return { ok: false, error: 'Marque de raquette invalide' }
     if (tension === null) {
         return { ok: false, error: 'Tension invalide' }
     }
@@ -152,6 +156,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
         data: {
             firstName,
             sport: sport as Sport,
+            racketBrand,
             tension,
             stringSource: stringSource as StringSource,
             playerStringName,
@@ -175,6 +180,36 @@ export function calculateJobPrice({
 }): number {
     const standardPrice = laborPrice + (stringSource === 'shop' ? (stringPrice ?? 0) : 0)
     return Math.max(0, Math.round((standardPrice - discount) * 100) / 100)
+}
+
+export function revenueForJob(job: { price: number; cost?: number; isPaid: boolean }): number {
+    return job.isPaid ? job.price : 0
+}
+
+type JobStatusWhere = {
+    OR?: Array<{ isDone?: boolean; isPaid?: boolean; isReturned?: boolean }>
+    isDone?: boolean
+    isPaid?: boolean
+    isReturned?: boolean
+}
+
+export function getJobStatusWhere(status: unknown): JobStatusWhere {
+    if (status === 'active') {
+        return {
+            OR: [
+                { isDone: false },
+                { isPaid: false },
+                { isReturned: false },
+            ],
+        }
+    }
+    if (status === 'done') return { isDone: true }
+    if (status === 'paid') return { isPaid: true }
+    if (status === 'returned') return { isReturned: true }
+    if (status === 'returned-unpaid') {
+        return { isDone: true, isReturned: true, isPaid: false }
+    }
+    return {}
 }
 
 export function parsePricingSettingsInput(formData: FormData): ValidationResult<{ laborPrice: number }> {

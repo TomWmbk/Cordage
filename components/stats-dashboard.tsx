@@ -16,6 +16,7 @@ import {
     ResponsiveContainer
 } from 'recharts'
 import { Button } from '@/components/button'
+import { revenueForJob } from '@/lib/domain'
 
 type Job = {
     id: number
@@ -30,7 +31,7 @@ interface StatsDashboardProps {
     jobs: Job[]
 }
 
-type Metric = 'profit' | 'volume'
+type Metric = 'revenue' | 'volume'
 
 export function StatsDashboard({ jobs }: StatsDashboardProps) {
     const [activeModalMetric, setActiveModalMetric] = useState<Metric | null>(null)
@@ -54,17 +55,15 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
 
     // Global KPIs (All Time) for the main cards
     const globalKpis = useMemo(() => {
-        let profit = 0
+        let revenue = 0
         let volume = 0
         parsedJobs.forEach(job => {
-            if (job.isPaid) {
-                profit += (job.price || 0) - (job.cost || 0)
-            }
+            revenue += revenueForJob(job)
             if (job.isDone) {
                 volume += 1
             }
         })
-        return { profit, volume }
+        return { revenue, volume }
     }, [parsedJobs])
 
     // Filter data based on custom date range
@@ -98,10 +97,8 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
 
             const entry = grouped.get(key)!
 
-            if (activeModalMetric === 'profit') {
-                if (job.isPaid) {
-                    entry.value += (job.price || 0) - (job.cost || 0)
-                }
+            if (activeModalMetric === 'revenue') {
+                entry.value += revenueForJob(job)
             } else {
                 if (job.isDone) {
                     entry.value += 1
@@ -132,14 +129,14 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
         <>
             {/* Main Page KPI Cards */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <button type="button" className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid focus-visible:ring-offset-2" onClick={() => setActiveModalMetric('profit')}>
+                <button type="button" className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acid focus-visible:ring-offset-2" onClick={() => setActiveModalMetric('revenue')}>
                     <Card className={cn(kpiStyles.card, "h-full transition-all duration-200 hover:-translate-y-1") }>
                         <CardHeader className={kpiStyles.header}>
-                            <CardTitle className={kpiStyles.title}>Bénéfice Total</CardTitle>
+                            <CardTitle className={kpiStyles.title}>CA Total</CardTitle>
                             <Wallet className="h-5 w-5 text-acid" aria-hidden="true" />
                         </CardHeader>
                         <CardContent>
-                            <div className={kpiStyles.value}>{globalKpis.profit.toFixed(2)} €</div>
+                            <div className={kpiStyles.value}>{globalKpis.revenue.toFixed(2)} €</div>
                             <p className={kpiStyles.subtext}>Afficher le détail</p>
                         </CardContent>
                     </Card>
@@ -186,7 +183,7 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
                                 <X className="w-5 h-5" />
                             </Button>
                             <h2 id="stats-modal-title" className="text-center font-display text-2xl font-bold uppercase">
-                                {activeModalMetric === 'profit' ? 'Évolution du Bénéfice' : 'Évolution du Volume'}
+                                {activeModalMetric === 'revenue' ? 'Évolution du CA' : 'Évolution du Volume'}
                             </h2>
                             <div className="w-10"></div>
                         </div>
@@ -271,7 +268,7 @@ export function StatsDashboard({ jobs }: StatsDashboardProps) {
                                             axisLine={false}
                                             tickLine={false}
                                             tick={{ fill: '#64748b', fontSize: 12 }}
-                                            tickFormatter={(value) => activeModalMetric === 'profit' ? `${value}€` : value}
+                                            tickFormatter={(value) => activeModalMetric === 'revenue' ? `${value}€` : value}
                                         />
                                         <Tooltip
                                             contentStyle={{

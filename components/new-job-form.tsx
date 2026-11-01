@@ -7,6 +7,7 @@ import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
 import { Search, X, Crosshair, Plus, PackageCheck, UserRound, Pencil, Save } from 'lucide-react'
+import { RACKET_BRANDS } from '@/lib/domain'
 
 type StringReference = {
     id: number
@@ -27,6 +28,7 @@ export type EditableJob = {
     id: number
     firstName: string
     sport: string
+    racketBrand: string
     tension: string
     stringSource: 'shop' | 'player'
     stringId: number | null
@@ -52,6 +54,7 @@ export function NewJobForm({
 
     // Form states
     const [sport, setSport] = useState(editingJob?.sport ?? '')
+    const [racketBrand, setRacketBrand] = useState(editingJob?.racketBrand ?? '')
     const [tension, setTension] = useState(editingJob?.tension ?? '')
     const [selectedStringId, setSelectedStringId] = useState(editingJob?.stringId?.toString() ?? '')
     const [stringSource, setStringSource] = useState<'shop' | 'player'>(editingJob?.stringSource ?? 'shop')
@@ -71,7 +74,7 @@ export function NewJobForm({
     const parsedCredit = Number(creditAmount)
     const appliedCredit = showCredit && Number.isFinite(parsedCredit) ? Math.max(0, parsedCredit) : 0
     const finalPrice = Math.max(0, Math.round((standardPrice - appliedCredit) * 100) / 100)
-    const isDirty = Boolean(firstName || sport || tension || selectedStringId || stringSource !== 'shop' || showCredit)
+    const isDirty = Boolean(firstName || sport || racketBrand || tension || selectedStringId || stringSource !== 'shop' || showCredit)
 
     useEffect(() => {
         if (editingJob) cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -121,6 +124,7 @@ export function NewJobForm({
         formRef.current?.reset()
         setFirstName('')
         setSport('')
+        setRacketBrand('')
         setTension('')
         setSelectedStringId('')
         setStringSource('shop')
@@ -212,7 +216,7 @@ export function NewJobForm({
                     </fieldset>
 
                     {/* Name Input with Autocomplete */}
-                    <div className="md:col-span-2 relative" ref={wrapperRef}>
+                    <div className="md:col-span-3 relative" ref={wrapperRef}>
                         <label htmlFor="job-first-name" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Client</label>
                         <div className="relative">
                             <Input
@@ -251,7 +255,7 @@ export function NewJobForm({
                     </div>
 
                     {/* Sport */}
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-3">
                         <label htmlFor="job-sport" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Sport</label>
                         <select
                             name="sport"
@@ -268,8 +272,26 @@ export function NewJobForm({
                         </select>
                     </div>
 
+                    {/* Racket brand */}
+                    <div className="md:col-span-6">
+                        <label htmlFor="job-racket-brand" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Marque de la raquette</label>
+                        <Input
+                            name="racketBrand"
+                            id="job-racket-brand"
+                            list="racket-brand-options"
+                            maxLength={80}
+                            placeholder="Ex. Babolat"
+                            value={racketBrand}
+                            onChange={(event) => setRacketBrand(event.target.value)}
+                            required
+                        />
+                        <datalist id="racket-brand-options">
+                            {RACKET_BRANDS.map((brand) => <option key={brand} value={brand} />)}
+                        </datalist>
+                    </div>
+
                     {/* String Selection */}
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-7">
                         {stringSource === 'shop' ? (
                             <>
                                 <label htmlFor="job-string" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Cordage atelier</label>

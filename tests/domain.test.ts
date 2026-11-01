@@ -6,12 +6,14 @@ import {
     calculateJobPrice,
     canToggleJobStatus,
     destinationForRole,
+    getJobStatusWhere,
     isJobStatusField,
     parseJobInput,
     parsePricingSettingsInput,
     parseProfileSettingsInput,
     parseRegistrationInput,
     parseStringReferenceInput,
+    revenueForJob,
 } from '../lib/domain.ts'
 
 function formData(values: Record<string, string>): FormData {
@@ -100,6 +102,7 @@ test('job input rejects negative prices and unsupported sports', () => {
     const excessiveDiscount = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Tennis',
+        racketBrand: 'Babolat',
         tension: '24',
         stringSource: 'shop',
         stringId: '1',
@@ -123,6 +126,7 @@ test('job input requires an atelier reference only for an atelier string', () =>
     const missingAtelierString = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Tennis',
+        racketBrand: 'Babolat',
         tension: '24',
         stringSource: 'shop',
         discount: '0',
@@ -130,6 +134,7 @@ test('job input requires an atelier reference only for an atelier string', () =>
     const playerString = parseJobInput(formData({
         firstName: 'Alice',
         sport: 'Tennis',
+        racketBrand: 'Babolat',
         tension: '24',
         stringSource: 'player',
         playerStringName: '  Wilson Revolve 1.25  ',
@@ -148,6 +153,7 @@ test('job input returns bounded numeric values for a valid form', () => {
     const result = parseJobInput(formData({
         firstName: '  Alice  ',
         sport: 'Badminton',
+        racketBrand: '  Yonex  ',
         tension: '12.5',
         stringSource: 'shop',
         discount: '3',
@@ -160,6 +166,7 @@ test('job input returns bounded numeric values for a valid form', () => {
         data: {
             firstName: 'Alice',
             sport: 'Badminton',
+            racketBrand: 'Yonex',
             tension: '12.5',
             stringSource: 'shop',
             playerStringName: null,
@@ -167,6 +174,31 @@ test('job input returns bounded numeric values for a valid form', () => {
             cost: 4.5,
             stringId: 12,
         },
+    })
+})
+
+test('job input requires and trims the racket brand', () => {
+    const missingBrand = parseJobInput(formData({
+        firstName: 'Alice',
+        sport: 'Tennis',
+        tension: '24',
+        stringSource: 'player',
+        discount: '0',
+    }))
+
+    assert.deepEqual(missingBrand, { ok: false, error: 'Marque de raquette invalide' })
+})
+
+test('revenue counts paid sales at their full price', () => {
+    assert.equal(revenueForJob({ price: 25, cost: 8, isPaid: true }), 25)
+    assert.equal(revenueForJob({ price: 25, cost: 8, isPaid: false }), 0)
+})
+
+test('returned unpaid status targets completed returned jobs that still need payment', () => {
+    assert.deepEqual(getJobStatusWhere('returned-unpaid'), {
+        isDone: true,
+        isReturned: true,
+        isPaid: false,
     })
 })
 

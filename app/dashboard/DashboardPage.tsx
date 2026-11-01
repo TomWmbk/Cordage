@@ -104,7 +104,7 @@ export default async function DashboardPage({
 }
 
 function toEditableJob(
-    job: { id: number; tension: string; price: number; stringName: string | null; stringSource: string; customer: { firstName: string; sport: string } },
+    job: { id: number; tension: string; racketBrand: string; price: number; stringName: string | null; stringSource: string; customer: { firstName: string; sport: string } },
     stringReferences: { id: number; brand: string; model: string; gauge: string | null; price: number }[],
     laborPrice: number,
 ): EditableJob {
@@ -120,6 +120,7 @@ function toEditableJob(
         id: job.id,
         firstName: job.customer.firstName,
         sport: job.customer.sport,
+        racketBrand: job.racketBrand,
         tension: job.tension,
         stringSource,
         stringId: reference?.id ?? null,

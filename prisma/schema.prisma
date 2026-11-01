@@ -42,6 +42,7 @@ model User {
   customers  Customer[]
   racketJobs RacketJob[]
   stringReferences StringReference[]
+  passkeys Passkey[]
 }
 
 model RacketJob {
@@ -52,6 +53,7 @@ model RacketJob {
   customer       Customer  @relation(fields: [customerId], references: [id])
   
   tension        String
+  racketBrand    String    @default("Non renseignée")
   price          Float
   
   createdAt      DateTime  @default(now())
@@ -83,4 +85,15 @@ model StringReference {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model Passkey {
+  id          String @id
+  userId      Int
+  publicKey   Bytes
+  counter     BigInt
+  deviceType  String
+  backedUp    Boolean
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

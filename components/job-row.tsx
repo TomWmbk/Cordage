@@ -17,6 +17,7 @@ interface JobRowProps {
             sport: string
         }
         tension: string
+        racketBrand: string
         price: number
         createdAt: Date | string
         isDone: boolean
@@ -70,6 +71,8 @@ export function JobRow({ job }: JobRowProps) {
                         <span className="font-bold uppercase tracking-wide text-ink dark:text-stone-200">{job.customer.sport}</span>
                         <span>•</span>
                         <span>{job.tension} kg</span>
+                        <span>•</span>
+                        <span>Raquette {job.racketBrand}</span>
                         <span>•</span>
                         <span>{job.price} €</span>
                         <span>•</span>
