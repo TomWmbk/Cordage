@@ -8,6 +8,7 @@ import { ArrowRight, LockKeyhole, UserRound } from 'lucide-react'
 import { Input } from '@/components/input'
 import { Button } from '@/components/button'
 import { AuthShell } from '@/components/auth-shell'
+import { CredentialForm } from '@/components/credential-form'
 
 function LoginForm() {
     const [username, setUsername] = useState('')
@@ -45,7 +46,7 @@ function LoginForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <CredentialForm onSubmit={handleSubmit}>
             <div>
                 <label htmlFor="login-username" className="mb-2 block text-sm font-semibold">Nom d’utilisateur</label>
                 <div className="relative">
@@ -72,7 +73,7 @@ function LoginForm() {
                 Première utilisation ?{' '}
                 <Link href="/register" className="font-semibold text-ink underline decoration-acid decoration-2 underline-offset-4 dark:text-white">Créer un compte cordeur</Link>
             </p>
-        </form>
+        </CredentialForm>
     )
 }
 

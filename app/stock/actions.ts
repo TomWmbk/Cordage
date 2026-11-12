@@ -17,6 +17,8 @@ export async function getStringReferences() {
             model: true,
             gauge: true,
             price: true,
+            reelCost: true,
+            jobsPerReel: true,
             type: true,
             isInStock: true,
         },

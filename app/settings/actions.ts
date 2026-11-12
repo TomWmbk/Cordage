@@ -5,6 +5,17 @@ import { db } from '@/lib/db'
 import { parsePricingSettingsInput, parseProfileSettingsInput } from '@/lib/domain'
 import { revalidatePath } from 'next/cache'
 
+export async function addRacketBrand(formData: FormData) {
+    const { id: userId } = await requireRole('stringer')
+    const value = formData.get('name')
+    if (typeof value !== 'string' || !value.trim() || value.trim().length > 80) throw new Error('Marque invalide')
+    const name = value.trim()
+    const key = name.toLocaleLowerCase('fr')
+    await db.racketBrand.upsert({ where: { userId_key: { userId, key } }, create: { userId, key, name }, update: {} })
+    revalidatePath('/settings')
+    revalidatePath('/dashboard')
+}
+
 export async function updatePricingSettings(formData: FormData) {
     const { id: userId } = await requireRole('stringer')
     const parsed = parsePricingSettingsInput(formData)

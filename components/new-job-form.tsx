@@ -7,7 +7,7 @@ import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
 import { Search, X, Crosshair, Plus, PackageCheck, UserRound, Pencil, Save } from 'lucide-react'
-import { RACKET_BRANDS } from '@/lib/domain'
+
 
 type StringReference = {
     id: number
@@ -29,6 +29,7 @@ export type EditableJob = {
     firstName: string
     sport: string
     racketBrand: string
+    racketModel: string | null
     tension: string
     stringSource: 'shop' | 'player'
     stringId: number | null
@@ -40,10 +41,12 @@ export function NewJobForm({
     stringReferences = [],
     laborPrice,
     editingJob,
+    brands,
 }: {
     stringReferences?: StringReference[]
     laborPrice: number
     editingJob?: EditableJob
+    brands: string[]
 }) {
     const router = useRouter()
     const [firstName, setFirstName] = useState(editingJob?.firstName ?? '')
@@ -55,6 +58,7 @@ export function NewJobForm({
     // Form states
     const [sport, setSport] = useState(editingJob?.sport ?? '')
     const [racketBrand, setRacketBrand] = useState(editingJob?.racketBrand ?? '')
+    const [racketModel, setRacketModel] = useState(editingJob?.racketModel ?? '')
     const [tension, setTension] = useState(editingJob?.tension ?? '')
     const [selectedStringId, setSelectedStringId] = useState(editingJob?.stringId?.toString() ?? '')
     const [stringSource, setStringSource] = useState<'shop' | 'player'>(editingJob?.stringSource ?? 'shop')
@@ -74,7 +78,7 @@ export function NewJobForm({
     const parsedCredit = Number(creditAmount)
     const appliedCredit = showCredit && Number.isFinite(parsedCredit) ? Math.max(0, parsedCredit) : 0
     const finalPrice = Math.max(0, Math.round((standardPrice - appliedCredit) * 100) / 100)
-    const isDirty = Boolean(firstName || sport || racketBrand || tension || selectedStringId || stringSource !== 'shop' || showCredit)
+    const isDirty = Boolean(firstName || sport || racketBrand || racketModel || tension || selectedStringId || stringSource !== 'shop' || showCredit)
 
     useEffect(() => {
         if (editingJob) cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -125,6 +129,7 @@ export function NewJobForm({
         setFirstName('')
         setSport('')
         setRacketBrand('')
+        setRacketModel('')
         setTension('')
         setSelectedStringId('')
         setStringSource('shop')
@@ -273,21 +278,17 @@ export function NewJobForm({
                     </div>
 
                     {/* Racket brand */}
-                    <div className="md:col-span-6">
+                    <div className="md:col-span-3">
                         <label htmlFor="job-racket-brand" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Marque de la raquette</label>
-                        <Input
-                            name="racketBrand"
-                            id="job-racket-brand"
-                            list="racket-brand-options"
-                            maxLength={80}
-                            placeholder="Ex. Babolat"
-                            value={racketBrand}
-                            onChange={(event) => setRacketBrand(event.target.value)}
-                            required
-                        />
-                        <datalist id="racket-brand-options">
-                            {RACKET_BRANDS.map((brand) => <option key={brand} value={brand} />)}
-                        </datalist>
+                        <select name="racketBrand" id="job-racket-brand" value={racketBrand} onChange={e => setRacketBrand(e.target.value)} required className="h-11 w-full border border-line bg-surface-strong px-3 text-sm">
+                            <option value="">Choisir une marque…</option>
+                            {racketBrand && !brands.includes(racketBrand) && <option value={racketBrand}>{racketBrand}</option>}
+                            {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
+                        </select>
+                    </div>
+                    <div className="md:col-span-3">
+                        <label htmlFor="job-racket-model" className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Modèle de la raquette</label>
+                        <Input id="job-racket-model" name="racketModel" maxLength={120} value={racketModel} onChange={e => setRacketModel(e.target.value)} placeholder="Ex. Astrox 88D" />
                     </div>
 
                     {/* String Selection */}

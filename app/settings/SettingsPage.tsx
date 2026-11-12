@@ -4,11 +4,14 @@ import { PricingSettingsForm } from '@/components/pricing-settings-form'
 import { ProfileSettingsForm } from '@/components/profile-settings-form'
 import { requireRole } from '@/lib/auth'
 import { pageStyles } from '@/lib/styles'
+import { getRacketBrands } from '@/lib/racket-brands'
+import { RacketBrandSettings } from '@/components/racket-brand-settings'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
-    const { username, email, laborPrice } = await requireRole('stringer')
+    const { id, username, email, laborPrice } = await requireRole('stringer')
+    const brands = await getRacketBrands(id)
 
     return (
         <div className={pageStyles.wrapper}>
@@ -22,6 +25,7 @@ export default async function SettingsPage() {
                 <div className="grid items-start gap-6 lg:grid-cols-2">
                     <ProfileSettingsForm username={username} email={email ?? ''} />
                     <PricingSettingsForm laborPrice={laborPrice} />
+                    <RacketBrandSettings brands={brands} />
                 </div>
             </main>
         </div>

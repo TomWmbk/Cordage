@@ -5,10 +5,10 @@ import { JobFilters } from '@/components/job-filters'
 import { JobRow } from '@/components/job-row'
 import { pageStyles } from '@/lib/styles'
 import { ExportButton } from '@/components/export-button'
-import { StatsDashboard } from '@/components/stats-dashboard'
 import { requireRole } from '@/lib/auth'
 import { PageIntro } from '@/components/page-intro'
 import { getJobStatusWhere } from '@/lib/domain'
+import { ActivityReport } from '@/components/activity-report'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,20 +88,8 @@ export default async function StatsPage({
                     </div>}
                 />
 
-                {/* Interactive Dashboard */}
-                <section className="mb-12">
-                    <h2 className="sr-only">Indicateurs clés</h2>
-                    <StatsDashboard jobs={allJobs.map(job => ({
-                        id: job.id,
-                        createdAt: job.createdAt.toISOString(),
-                        price: job.price,
-                        cost: job.cost,
-                        isPaid: job.isPaid,
-                        isDone: job.isDone
-                    }))} />
-                </section>
-
                 {/* History Table with Filters */}
+                <ActivityReport jobs={allJobs.map(job => ({ ...job, createdAt: job.createdAt.toISOString() }))} />
                 <section>
                     <div className={pageStyles.sectionHeader}>
                         <h2 className={pageStyles.sectionTitle}>Historique des poses</h2>

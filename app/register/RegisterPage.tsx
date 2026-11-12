@@ -7,6 +7,7 @@ import { ArrowRight, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import { Input } from '@/components/input'
 import { Button } from '@/components/button'
 import { AuthShell } from '@/components/auth-shell'
+import { CredentialForm } from '@/components/credential-form'
 
 export default function RegisterPage() {
     const [username, setUsername] = useState('')
@@ -43,7 +44,7 @@ export default function RegisterPage() {
 
     return (
         <AuthShell eyebrow="Nouvel atelier" title="Préparer le terrain." description="Créez votre espace cordeur. Vos clients, vos bobines et votre activité resteront séparés des autres ateliers.">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <CredentialForm onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="register-username" className="mb-2 block text-sm font-semibold">Nom d’utilisateur</label>
                     <div className="relative">
@@ -82,7 +83,7 @@ export default function RegisterPage() {
                     Déjà équipé ?{' '}
                     <Link href="/login?role=stringer" className="font-semibold text-ink underline decoration-acid decoration-2 underline-offset-4 dark:text-white">Se connecter</Link>
                 </p>
-            </form>
+            </CredentialForm>
         </AuthShell>
     )
 }

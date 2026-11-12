@@ -50,7 +50,7 @@ async function pricedJob(transaction: Transaction, userId: number, laborPrice: n
         ? null
         : await transaction.stringReference.findFirst({
             where: { id: stringId, userId, isInStock: true },
-            select: { brand: true, model: true, gauge: true, price: true },
+            select: { brand: true, model: true, gauge: true, price: true, reelCost: true, jobsPerReel: true },
         })
 
     if (stringSource === 'shop' && !selectedString) throw new Error('Cordage indisponible')
@@ -64,6 +64,8 @@ async function pricedJob(transaction: Transaction, userId: number, laborPrice: n
 
     return {
         stringName,
+        materialCost: stringSource === 'player' ? 0 : selectedString?.reelCost != null && selectedString.jobsPerReel ? selectedString.reelCost / selectedString.jobsPerReel : null,
+        stringReferenceId: stringSource === 'shop' ? stringId : null,
         standardPrice: calculateJobPrice({ ...pricing, discount: 0 }),
         price: calculateJobPrice({ ...pricing, discount }),
     }
@@ -89,10 +91,10 @@ export async function createJob(formData: FormData) {
     const { id: userId, laborPrice } = await requireRole('stringer')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { tension, racketBrand, stringSource, cost } = parsed.data
+    const { tension, racketBrand, racketModel, stringSource, cost } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
-        const { stringName, standardPrice, price } = await pricedJob(transaction, userId, laborPrice, parsed.data)
+        const { stringName, standardPrice, price, materialCost, stringReferenceId } = await pricedJob(transaction, userId, laborPrice, parsed.data)
         const customer = await upsertCustomer(transaction, userId, parsed.data, standardPrice)
 
         await transaction.racketJob.create({
@@ -101,6 +103,9 @@ export async function createJob(formData: FormData) {
                 customerId: customer.id,
                 tension,
                 racketBrand,
+                racketModel,
+                materialCost,
+                stringReferenceId,
                 price,
                 cost,
                 stringName,
@@ -123,13 +128,13 @@ export async function updateJob(jobId: number, formData: FormData) {
     if (!Number.isSafeInteger(jobId) || jobId <= 0) throw new Error('Cordage invalide')
     const parsed = parseJobInput(formData)
     if (!parsed.ok) throw new Error(parsed.error)
-    const { tension, racketBrand, stringSource } = parsed.data
+    const { tension, racketBrand, racketModel, stringSource } = parsed.data
 
     await prisma.$transaction(async (transaction) => {
         const job = await transaction.racketJob.findFirst({ where: { id: jobId, userId } })
         if (!job) throw new Error('Cordage introuvable')
 
-        const { stringName, standardPrice, price } = await pricedJob(transaction, userId, laborPrice, parsed.data)
+        const { stringName, standardPrice, price, materialCost, stringReferenceId } = await pricedJob(transaction, userId, laborPrice, parsed.data)
         const customer = await upsertCustomer(transaction, userId, parsed.data, standardPrice)
 
         // Le solde client ne contient que les poses non payées
@@ -150,6 +155,9 @@ export async function updateJob(jobId: number, formData: FormData) {
                 customerId: customer.id,
                 tension,
                 racketBrand,
+                racketModel,
+                materialCost: job.stringReferenceId === stringReferenceId && job.stringSource === stringSource ? job.materialCost : materialCost,
+                stringReferenceId,
                 price,
                 stringName,
                 stringSource,

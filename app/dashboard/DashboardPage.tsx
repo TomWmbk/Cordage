@@ -4,6 +4,7 @@ import { NewJobForm, type EditableJob } from '@/components/new-job-form'
 import { JobRow } from '@/components/job-row'
 import { pageStyles } from '@/lib/styles'
 import { requireRole } from '@/lib/auth'
+import { getRacketBrands } from '@/lib/racket-brands'
 import { PageIntro } from '@/components/page-intro'
 
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,7 @@ export default async function DashboardPage({
     searchParams: Promise<{ edit?: string | string[] }>
 }) {
     const { id: userId, laborPrice } = await requireRole('stringer')
+    const brands = await getRacketBrands(userId)
     const editId = Number((await searchParams).edit)
 
     // Fetch active jobs (not fully complete) - only for current user
@@ -65,7 +67,7 @@ export default async function DashboardPage({
 
                 {/* New Job Section */}
                 <section className="motion-enter-delayed mb-14">
-                    <NewJobForm key={editingJob?.id ?? 'new'} stringReferences={stringReferences} laborPrice={laborPrice} editingJob={editingJob} />
+                    <NewJobForm brands={brands} key={editingJob?.id ?? 'new'} stringReferences={stringReferences} laborPrice={laborPrice} editingJob={editingJob} />
                 </section>
 
                 {/* Active Jobs Section */}
@@ -104,7 +106,7 @@ export default async function DashboardPage({
 }
 
 function toEditableJob(
-    job: { id: number; tension: string; racketBrand: string; price: number; stringName: string | null; stringSource: string; customer: { firstName: string; sport: string } },
+    job: { id: number; tension: string; racketBrand: string; racketModel: string | null; price: number; stringName: string | null; stringSource: string; customer: { firstName: string; sport: string } },
     stringReferences: { id: number; brand: string; model: string; gauge: string | null; price: number }[],
     laborPrice: number,
 ): EditableJob {
@@ -121,6 +123,7 @@ function toEditableJob(
         firstName: job.customer.firstName,
         sport: job.customer.sport,
         racketBrand: job.racketBrand,
+        racketModel: job.racketModel,
         tension: job.tension,
         stringSource,
         stringId: reference?.id ?? null,

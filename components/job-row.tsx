@@ -18,6 +18,7 @@ interface JobRowProps {
         }
         tension: string
         racketBrand: string
+        racketModel: string | null
         price: number
         createdAt: Date | string
         isDone: boolean
@@ -72,7 +73,7 @@ export function JobRow({ job }: JobRowProps) {
                         <span>•</span>
                         <span>{job.tension} kg</span>
                         <span>•</span>
-                        <span>Raquette {job.racketBrand}</span>
+                        <span>Raquette {job.racketBrand} {job.racketModel}</span>
                         <span>•</span>
                         <span>{job.price} €</span>
                         <span>•</span>

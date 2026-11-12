@@ -123,7 +123,7 @@ export function JobFilters() {
                     size="sm"
                     onClick={() => router.push(pathname + '?' + createQueryString('status', 'returned-unpaid'))}
                 >
-                    Fait · rendu · non payé
+                    Rendu · non payé
                 </Button>
             </div>
         </div>

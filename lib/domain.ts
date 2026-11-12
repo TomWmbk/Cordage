@@ -111,6 +111,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     firstName: string
     sport: Sport
     racketBrand: string
+    racketModel: string | null
     tension: string
     stringSource: StringSource
     playerStringName: string | null
@@ -121,6 +122,9 @@ export function parseJobInput(formData: FormData): ValidationResult<{
     const firstName = boundedText(formData.get('firstName'), 80)
     const sport = formData.get('sport')
     const racketBrand = boundedText(formData.get('racketBrand'), 80)
+    const modelValue = formData.get('racketModel')
+    const racketModel = typeof modelValue === 'string' && modelValue.trim() ? boundedText(modelValue, 120) : null
+    if (modelValue && (typeof modelValue !== 'string' || modelValue.trim().length > 120)) return { ok: false, error: 'Modèle de raquette invalide' }
     const tension = parseTension(formData.get('tension'))
     const stringSource = formData.get('stringSource')
     const playerStringNameValue = formData.get('playerStringName')
@@ -157,6 +161,7 @@ export function parseJobInput(formData: FormData): ValidationResult<{
             firstName,
             sport: sport as Sport,
             racketBrand,
+            racketModel,
             tension,
             stringSource: stringSource as StringSource,
             playerStringName,
@@ -225,6 +230,8 @@ export function parseStringReferenceInput(formData: FormData): ValidationResult<
     model: string
     gauge: string | null
     price: number
+    reelCost: number | null
+    jobsPerReel: number | null
     type: string | null
     isInStock: boolean
 }> {
@@ -233,6 +240,9 @@ export function parseStringReferenceInput(formData: FormData): ValidationResult<
     const gaugeValue = formData.get('gauge')
     const gauge = typeof gaugeValue === 'string' && gaugeValue.trim() ? gaugeValue.trim().slice(0, 20) : null
     const price = finiteNumber(formData.get('price'))
+    const reelCost = finiteNumber(formData.get('reelCost'))
+    const jobsPerReel = finiteNumber(formData.get('jobsPerReel'))
+    if ((formData.get('reelCost') && reelCost === null) || (formData.get('jobsPerReel') && jobsPerReel === null) || (reelCost !== null && (reelCost < 0 || reelCost > 100000)) || (jobsPerReel !== null && (!Number.isInteger(jobsPerReel) || jobsPerReel < 1 || jobsPerReel > 1000)) || ((reelCost === null) !== (jobsPerReel === null))) return { ok: false, error: 'Renseignez le coût de la bobine et son nombre de poses (1 à 1000)' }
     const typeValue = formData.get('type')
     const type = typeof typeValue === 'string' && typeValue ? typeValue : null
 
@@ -250,6 +260,8 @@ export function parseStringReferenceInput(formData: FormData): ValidationResult<
             model,
             gauge,
             price,
+            reelCost,
+            jobsPerReel,
             type,
             isInStock: formData.get('isInStock') === 'on',
         },

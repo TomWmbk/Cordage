@@ -14,6 +14,8 @@ type StringReference = {
     model: string
     gauge: string | null
     price: number
+    reelCost: number | null
+    jobsPerReel: number | null
     type: string | null
     isInStock: boolean
 }
@@ -138,6 +140,7 @@ export function StockManager({ initialStrings }: { initialStrings: StringReferen
                                 <span className="eyebrow">Prix du cordage</span>
                                 <span className="metric-number font-display text-3xl font-bold leading-none text-ink dark:text-white">{str.price.toFixed(2)} €</span>
                             </div>
+                            <p className="mt-3 text-xs text-muted">{str.reelCost !== null && str.jobsPerReel ? `${str.reelCost.toFixed(2)} € / bobine · ${str.jobsPerReel} poses · ${(str.reelCost / str.jobsPerReel).toFixed(2)} € de matière / pose` : 'Coût matière non renseigné'}</p>
                         </CardContent>
                     </Card>
                 ))}
@@ -210,6 +213,11 @@ export function StockManager({ initialStrings }: { initialStrings: StringReferen
                                 <Input id="string-price" name="price" type="number" min="0.01" max="10000" step="0.01" defaultValue={editingString?.price} placeholder="25.00" required />
                             </div>
 
+                            <div className="grid grid-cols-2 gap-4">
+                                <label className="space-y-2 text-sm">Coût d’achat bobine (€)<Input name="reelCost" type="number" min="0" max="100000" step="0.01" defaultValue={editingString?.reelCost ?? ''} /></label>
+                                <label className="space-y-2 text-sm">Poses par bobine<Input name="jobsPerReel" type="number" min="1" max="1000" step="1" defaultValue={editingString?.jobsPerReel ?? ''} /></label>
+                            </div>
+                            <p className="text-xs text-muted">Coût matière par pose = coût de la bobine ÷ nombre de poses estimées. Ces valeurs seront conservées sur les nouvelles poses.</p>
                             {error && <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">{error}</div>}
 
                             <div className="flex items-center gap-2">

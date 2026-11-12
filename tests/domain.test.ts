@@ -167,6 +167,7 @@ test('job input returns bounded numeric values for a valid form', () => {
             firstName: 'Alice',
             sport: 'Badminton',
             racketBrand: 'Yonex',
+            racketModel: null,
             tension: '12.5',
             stringSource: 'shop',
             playerStringName: null,
@@ -187,6 +188,23 @@ test('job input requires and trims the racket brand', () => {
     }))
 
     assert.deepEqual(missingBrand, { ok: false, error: 'Marque de raquette invalide' })
+})
+
+test('racket model is trimmed and oversized models are rejected', () => {
+    const values = { firstName:'Alice',sport:'Tennis',racketBrand:'Yonex',tension:'24',stringSource:'player',racketModel:'  Astrox 88D  ' }
+    const result = parseJobInput(formData(values))
+    assert.equal(result.ok && result.data.racketModel,'Astrox 88D')
+    assert.equal(parseJobInput(formData({...values,racketModel:'a'.repeat(121)})).ok,false)
+})
+
+test('reel costs require a complete pair and a positive integer yield', () => {
+    const values = {brand:'Yonex',model:'BG65',price:'8',reelCost:'100',jobsPerReel:'20'}
+    const result = parseStringReferenceInput(formData(values))
+    assert.equal(result.ok && result.data.reelCost,100)
+    assert.equal(result.ok && result.data.jobsPerReel,20)
+    assert.equal(parseStringReferenceInput(formData({...values,jobsPerReel:''})).ok,false)
+    assert.equal(parseStringReferenceInput(formData({...values,jobsPerReel:'0'})).ok,false)
+    assert.equal(parseStringReferenceInput(formData({...values,jobsPerReel:'2.5'})).ok,false)
 })
 
 test('revenue counts paid sales at their full price', () => {

@@ -36,6 +36,7 @@ model User {
   password  String   // Hashed password
   role      String   @default("stringer") // "stringer" or "player"
   laborPrice Float   @default(10)
+  racketBrands RacketBrand[]
   createdAt DateTime @default(now())
   
   // Multi-tenant relations
@@ -54,6 +55,9 @@ model RacketJob {
   
   tension        String
   racketBrand    String    @default("Non renseignée")
+  racketModel    String?
+  materialCost   Float?
+  stringReferenceId Int?
   price          Float
   
   createdAt      DateTime  @default(now())
@@ -78,6 +82,8 @@ model StringReference {
   model     String
   gauge     String?  // e.g. "1.25"
   price     Float    // Selling price
+  reelCost Float?
+  jobsPerReel Int?
   type      String?  // "Monofilament", etc.
   isInStock Boolean  @default(true)
   
@@ -85,6 +91,15 @@ model StringReference {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model RacketBrand {
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  name String
+  key String
+  @@unique([userId, key])
 }
 
 model Passkey {
